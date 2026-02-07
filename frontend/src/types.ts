@@ -1,0 +1,33 @@
+export type LevelType = "regular" | "break";
+
+export type Level = {
+  type: LevelType;
+  minutes: number;
+  small_blind_cents: number;
+  big_blind_cents: number;
+  ante_cents: number;
+};
+
+export type Settings = {
+  levels: Level[];
+  sounds: {
+    start: string | null;
+    half: string | null;
+    thirty: string | null;
+    end: string | null;
+  };
+};
+
+export type State = {
+  current_level_index: number;
+  remaining_ms: number;
+  running: boolean;
+};
+
+export type Player = { id: string; name: string; eliminated: boolean; };
+
+export type Table = { id: string; name: string; seats: number; enabled: boolean; };
+
+export type Seat = { table_id: string; table_name: string; seat_num: number; player_id: string | null; };
+
+export type Announcement = { id?: number; created_at_ms: number; type: string; payload: any; };

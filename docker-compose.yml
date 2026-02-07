@@ -1,0 +1,22 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - pokertourney_data:/data
+      - ./sounds:/sounds
+    environment:
+      - DATABASE_PATH=/data/app.db
+      - SOUNDS_DIR=/sounds
+      - CORS_ALLOW_ORIGINS=*
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+
+    depends_on:
+      - backend
+
+volumes:
+  pokertourney_data:

@@ -1,0 +1,71 @@
+:root {
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  line-height: 1.4;
+  color-scheme: dark;
+  background: #0b0f14;
+  color: #e7eef7;
+}
+a { color: inherit; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+.container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 14px;
+}
+.row { display:flex; gap: 12px; flex-wrap: wrap; }
+.col { flex: 1; min-width: 260px; }
+.btn {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: inherit;
+}
+.btn:hover { background: rgba(255,255,255,0.16); }
+.btn.primary { background: rgba(76, 149, 255, 0.35); border-color: rgba(76,149,255,0.6); }
+.btn.danger { background: rgba(255, 76, 106, 0.28); border-color: rgba(255,76,106,0.55); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.input, select, textarea {
+  width: 100%;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: inherit;
+}
+label { display:block; font-size: 13px; opacity: 0.9; margin-bottom: 6px; }
+h1,h2,h3 { margin: 0 0 10px 0; }
+hr { border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 12px 0; }
+.table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; }
+.table th, .table td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.10); text-align: left; vertical-align: top; }
+.badge {
+  display:inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08);
+  font-size: 12px;
+}
+.kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+.gigantic {
+  font-size: 256px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-align: center;
+}
+.gigantic-sub { font-size: 64px; opacity: 0.95; }
+.big { font-size: 64px; font-weight: 800; letter-spacing: 1px; }
+.big-sub { font-size: 26px; opacity: 0.95; }
+.muted { opacity: 0.8; }
+.grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } .big { font-size: 48px; } }
