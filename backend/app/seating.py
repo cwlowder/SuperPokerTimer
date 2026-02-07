@@ -29,6 +29,19 @@ async def get_assignments(conn: aiosqlite.Connection) -> list[dict[str, Any]]:
     rows = await cur.fetchall()
     return [{"table_id": r["table_id"], "table_name": r["table_name"], "seat_num": r["seat_num"], "player_id": r["player_id"]} for r in rows]
 
+async def clear_eliminated_assignments(conn: aiosqlite.Connection) -> int:
+    # Assumes player table is "players" with column "eliminated" (0/1)
+    # and assignments table is "seat_assignments" with "player_id".
+    cur = await conn.execute("""
+        UPDATE seat_assignments
+        SET player_id = NULL
+        WHERE player_id IN (
+            SELECT id FROM players WHERE eliminated = 1
+        )
+    """)
+    await conn.commit()
+    return cur.rowcount or 0
+
 async def _ensure_seats_for_table(conn: aiosqlite.Connection, table_id: str, seats: int) -> None:
     cur = await conn.execute("SELECT COUNT(*) AS c FROM seat_assignments WHERE table_id=?", (table_id,))
     row = await cur.fetchone()
@@ -103,87 +116,142 @@ async def randomize_seating(conn: aiosqlite.Connection, bus: EventBus) -> dict[s
 
 async def rebalance(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]:
     await normalize_seats(conn)
-    players = await list_active_players(conn)
+
+    # 1) Remove eliminated players from seats
+    removed = await clear_eliminated_assignments(conn)
+
+    players = await list_active_players(conn)  # must exclude eliminated
     tables = [t for t in await list_tables(conn) if t["enabled"]]
     if not tables:
         return {"message": "No enabled tables.", "changes": []}
 
+    n_players = len(players)
+    if n_players == 0:
+        # Also clear any remaining assignments (just in case)
+        await clear_all_assignments(conn)
+        await conn.commit()
+        payload = {"message": "No active players.", "changes": []}
+        ts = now_ms()
+        await add_announcement(conn, created_at_ms=ts, type="rebalance", payload=payload)
+        await bus.publish(Event("announcement", {"type": "rebalance", "payload": payload, "created_at_ms": ts}))
+        return payload
+
     capacity = sum(t["seats"] for t in tables)
-    if len(players) > capacity:
-        return {"message": f"Not enough seats for {len(players)} players (capacity {capacity}).", "changes": []}
+    if n_players > capacity:
+        return {"message": f"Not enough seats for {n_players} players (capacity {capacity}).", "changes": []}
 
-    k = len(tables)
-    base = len(players) // k
-    extra = len(players) % k
-    desired = {t["id"]: base + (1 if i < extra else 0) for i, t in enumerate(tables)}
+    # Current assignments (after kicking eliminated)
+    prev = await get_assignments(conn)  # should include rows with player_id possibly NULL
+    prev_map = {a["player_id"]: (a["table_id"], a["seat_num"]) for a in prev if a["player_id"]}
 
-    assignments = await get_assignments(conn)
-    name_by_id = {p["id"]: p["name"] for p in players}
-    enabled_ids = set(desired.keys())
+    # Index players for stable ordering
+    players_by_id = {p["id"]: p for p in players}
+    active_ids = [p["id"] for p in players]
 
-    cur_by_table: dict[str, list[tuple[int, str]]] = {t["id"]: [] for t in tables}
-    unassigned: list[str] = []
+    # Build current seating by table for active players
+    seated_by_table: dict[str, list[str]] = {t["id"]: [] for t in tables}
+    for pid, (tid, _seat) in prev_map.items():
+        if pid in players_by_id and tid in seated_by_table:
+            seated_by_table[tid].append(pid)
 
-    for a in assignments:
-        pid = a["player_id"]
-        if not pid or pid not in name_by_id:
-            continue
-        if a["table_id"] not in enabled_ids:
-            unassigned.append(pid)
-            continue
-        cur_by_table[a["table_id"]].append((a["seat_num"], pid))
+    # 2) Compute target counts per table (as even as possible)
+    m = len(tables)
+    base = n_players // m
+    rem = n_players % m
 
-    move_list: list[tuple[str|None, int|None, str]] = []
-    for tid, seated in cur_by_table.items():
-        if len(seated) > desired[tid]:
-            seated_sorted = sorted(seated, key=lambda x: x[0], reverse=True)
-            to_move_n = len(seated_sorted) - desired[tid]
-            for seat_num, pid in seated_sorted[:to_move_n]:
-                move_list.append((tid, seat_num, pid))
-    for pid in unassigned:
-        move_list.append((None, None, pid))
+    # Deterministic: first rem tables get +1
+    tables_sorted = sorted(tables, key=lambda t: t["id"])
+    target: dict[str, int] = {}
+    for i, t in enumerate(tables_sorted):
+        target[t["id"]] = base + (1 if i < rem else 0)
 
-    async def open_seats_for(tid: str) -> list[int]:
-        cur = await conn.execute("SELECT seat_num FROM seat_assignments WHERE table_id=? AND player_id IS NULL ORDER BY seat_num ASC", (tid,))
-        rows = await cur.fetchall()
-        return [int(r["seat_num"]) for r in rows]
+    # 3) Decide who stays vs who moves (keep up to target at same table)
+    stay: dict[str, list[str]] = {t["id"]: [] for t in tables_sorted}
+    movers: list[str] = []
 
-    changes = []
+    # Keep people already seated at that table first (stable order)
+    for t in tables_sorted:
+        tid = t["id"]
+        want = target[tid]
+        current = seated_by_table.get(tid, [])
 
-    for from_tid, from_seat, pid in move_list:
-        deficit = [tid for tid in desired.keys() if len(cur_by_table[tid]) < desired[tid]]
-        if not deficit:
-            break
-        to_tid = deficit[0]
-        open_seats = await open_seats_for(to_tid)
-        if not open_seats:
-            continue
-        to_seat = open_seats[0]
+        current_sorted = sorted(
+            current,
+            key=lambda pid: prev_map.get(pid, (tid, 10**9))[1]  # seat order
+        )
 
-        if from_tid and from_seat:
-            await conn.execute("UPDATE seat_assignments SET player_id=NULL WHERE table_id=? AND seat_num=? AND player_id=?", (from_tid, from_seat, pid))
-            cur_by_table[from_tid] = [(s, p) for (s, p) in cur_by_table[from_tid] if p != pid]
+        stay[tid] = current_sorted[:want]
+        movers.extend(current_sorted[want:])
 
-        await conn.execute("UPDATE seat_assignments SET player_id=? WHERE table_id=? AND seat_num=?", (pid, to_tid, to_seat))
-        cur_by_table[to_tid].append((to_seat, pid))
+    # Add any unseated active players to movers
+    currently_seated = set(prev_map.keys())
+    for pid in active_ids:
+        if pid not in currently_seated:
+            movers.append(pid)
 
-        changes.append({
-            "player_id": pid,
-            "name": name_by_id.get(pid, pid),
-            "from_table": from_tid,
-            "from_seat": from_seat,
-            "to_table": to_tid,
-            "to_seat": to_seat,
-        })
+    # 4) Build exact slot list for each table (first N seats)
+    # Prefer low seat numbers, deterministic
+    table_slots: dict[str, list[tuple[str,int]]] = {}
+    for t in tables_sorted:
+        tid = t["id"]
+        want = target[tid]
+        slots = [(tid, seat_num) for seat_num in range(1, t["seats"] + 1)]
+        table_slots[tid] = slots[:want]
 
+    # 5) Produce final assignments: fill each table's slots with stay then movers
+    final_assignments: dict[str, tuple[str,int]] = {}  # pid -> (table_id, seat_num)
+
+    # Put stay players into first slots
+    for t in tables_sorted:
+        tid = t["id"]
+        slots = table_slots[tid]
+        keep_ids = stay[tid]
+        for pid, slot in zip(keep_ids, slots):
+            final_assignments[pid] = slot
+
+    # Fill remaining slots with movers
+    mover_idx = 0
+    for t in tables_sorted:
+        tid = t["id"]
+        slots = table_slots[tid]
+        used = len(stay[tid])
+        for slot in slots[used:]:
+            if mover_idx >= len(movers):
+                break
+            pid = movers[mover_idx]
+            mover_idx += 1
+            final_assignments[pid] = slot
+
+    # 6) Apply: clear and reassign (simple + safe)
+    await clear_all_assignments(conn)
+    for pid, (tid, seat_num) in final_assignments.items():
+        await conn.execute(
+            "UPDATE seat_assignments SET player_id=? WHERE table_id=? AND seat_num=?",
+            (pid, tid, seat_num),
+        )
     await conn.commit()
 
+    # 7) Build changes (only include moved/changed assignments OR include all — your call)
+    changes = []
+    for pid, (tid, seat_num) in final_assignments.items():
+        old = prev_map.get(pid)
+        if old != (tid, seat_num):
+            changes.append({
+                "player_id": pid,
+                "name": players_by_id[pid]["name"],
+                "from_table": old[0] if old else None,
+                "from_seat": old[1] if old else None,
+                "to_table": tid,
+                "to_seat": seat_num,
+            })
+
     ts = now_ms()
-    payload = {"message": "Rebalanced tables.", "changes": changes}
+    msg = f"Rebalanced tables. Removed {removed} eliminated player(s)." if removed else "Rebalanced tables."
+    payload = {"message": msg, "changes": changes}
+
     await add_announcement(conn, created_at_ms=ts, type="rebalance", payload=payload)
     await bus.publish(Event("announcement", {"type": "rebalance", "payload": payload, "created_at_ms": ts}))
     return payload
-
 
 async def deseat_seating(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]:
     # Capture previous assignments (for announcements)

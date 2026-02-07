@@ -457,7 +457,7 @@ export default function AdminPage() {
                     <span className="badge">{t.enabled ? "Enabled" : "Disabled"}</span>
                   </div>
                   <div className="row">
-                    <button className="btn" onClick={() => apiPatch(`/api/tables/${t.id}`, { enabled: !t.enabled }).then(loadAll)}>
+                    <button className="btn" onClick={() => apiPatch(`/api/tables/${t.id}`, { enabled: !t.enabled }).then(reload)}>
                       {t.enabled ? "Disable" : "Enable"}
                     </button>
                     <button className="btn danger" onClick={() => deleteTable(t)}>
@@ -555,6 +555,7 @@ export default function AdminPage() {
                         onClick={() => {
                           const file = (settings.sounds as any)[cue] ?? null;
                           if (!file) return;
+                          console.log("file", file);
                           setSoundPreview({ file, playId: Date.now() });
                         }}
                       >
