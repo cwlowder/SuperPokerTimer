@@ -8,7 +8,7 @@ import { Player, Table } from "../types";
 
 export default function DisplayPage() {
   const { playersById, tablesById } = useTourneyData();
-  const { settings, state, lastSoundFile, announcements } = useEventStream();
+  const { settings, state, lastSound, announcements } = useEventStream();
 
   // Big picture is read-only, but still plays configured sounds.
   const levels = settings?.levels ?? [];
@@ -18,7 +18,7 @@ export default function DisplayPage() {
 
   return (
     <div className="container" style={{ maxWidth: 1400 }}>
-      <SoundPlayer file={lastSoundFile} />
+      <SoundPlayer file={lastSound?.file ?? null} playId={lastSound?.playId} />
 
       <div className="row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
         <h1 style={{ margin: 0 }}>Big Picture</h1>

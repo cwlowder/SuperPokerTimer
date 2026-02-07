@@ -34,7 +34,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("timer");
 
   // ✅ Live data via WebSocket hook
-  const { settings, state, lastSoundFile, announcements: liveAnnouncements, connected } = useEventStream();
+  const { settings, state, lastSound, announcements: liveAnnouncements, connected } = useEventStream();
 
   // const [sounds, setSounds] = useState<string[]>([]);
   // const [players, setPlayers] = useState<Player[]>([]);
@@ -46,9 +46,9 @@ export default function AdminPage() {
   const [newPlayer, setNewPlayer] = useState("");
   const [newTableName, setNewTableName] = useState("Table 1");
   const [newTableSeats, setNewTableSeats] = useState(9);
-  const [soundToPlay, setSoundToPlay] = useState<string | null>(null);
+  const [soundPreview, setSoundPreview] = useState<{ file: string | null; playId: number } | null>(null);
   const [settingsDraft, setSettingsDraft] = useState<string>("");
-  
+
   const {
     sounds,
     players,
@@ -151,11 +151,11 @@ export default function AdminPage() {
   };
 
   // ---- Settings ----
-  const setSound = async (cue: "start" | "half" | "thirty" | "end", file: string | null) => {
+  const setSound = async (cue: "start" | "half" | "thirty" | "five" | "end", file: string | null) => {
     if (!settings) return;
     const next = { ...settings, sounds: { ...settings.sounds, [cue]: file } };
     await apiPut("/api/settings", next);
-    setSoundToPlay(file); // local preview
+    setSoundPreview({file: file, playId: Date.now()}); // local preview
     await reload()
   };
 
@@ -180,11 +180,11 @@ export default function AdminPage() {
     )) ?? null;
 
   // For SoundPlayer: if server told us to play a cue, prefer that; otherwise local preview
-  const soundFile = lastSoundFile ?? soundToPlay;
+  const soundToPlayNow = lastSound ?? soundPreview;
 
   return (
     <div className="container">
-      <SoundPlayer file={soundFile} />
+      <SoundPlayer file={soundToPlayNow?.file ?? null} playId={soundToPlayNow?.playId} />
 
       <div className="row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
         <h1 style={{ margin: 0 }}>Poker Tourney Admin</h1>
@@ -496,7 +496,7 @@ export default function AdminPage() {
               <hr />
               {settings ? (
                 <div style={{ display: "grid", gap: 10 }}>
-                  {(["start", "half", "thirty", "end"] as const).map((cue) => (
+                  {(["start", "half", "thirty", "five", "end"] as const).map((cue) => (
                     <div key={cue} className="grid2">
                       <div>
                         <label>{cue.toUpperCase()}</label>
@@ -514,7 +514,14 @@ export default function AdminPage() {
                         </select>
                       </div>
                       <div style={{ display: "flex", alignItems: "end" }}>
-                        <button className="btn" onClick={() => setSoundToPlay((settings.sounds as any)[cue] ?? null)}>
+                        <button
+                          className="btn"
+                          onClick={() => {
+                            const file = (settings.sounds as any)[cue] ?? null;
+                            if (!file) return;
+                            setSoundPreview({ file, playId: Date.now() });
+                          }}
+                        >
                           Preview
                         </button>
                       </div>

@@ -17,9 +17,8 @@ class TimerService:
         self._task: Optional[asyncio.Task] = None
         self._persist_every_ms = 100
         self._last_persist_ms = 0
-        self._half_fired = False
-        self._thirty_fired = False
-        self._start_fired = False
+
+        self._reset_milestones()
 
     async def load(self) -> None:
         state = await get_state(self.conn)
@@ -33,6 +32,7 @@ class TimerService:
     def _reset_milestones(self) -> None:
         self._half_fired = False
         self._thirty_fired = False
+        self._five_fired = False
         self._start_fired = False
 
     async def start(self) -> None:
@@ -75,22 +75,26 @@ class TimerService:
 
         if not self._start_fired:
             self._start_fired = True
-            await self.bus.publish(Event("sound", {"cue": "start", "file": sounds.get("start")}))
+            await self.bus.publish(Event("sound", {"cue": "start", "file": sounds.get("start"), "play_id": now_ms()}))
 
         if not self._half_fired and self.remaining_ms <= total_ms // 2:
             self._half_fired = True
-            await self.bus.publish(Event("sound", {"cue": "half", "file": sounds.get("half")}))
+            await self.bus.publish(Event("sound", {"cue": "half", "file": sounds.get("half"), "play_id": now_ms()}))
 
         if not self._thirty_fired and self.remaining_ms <= 30_000:
             self._thirty_fired = True
-            await self.bus.publish(Event("sound", {"cue": "thirty", "file": sounds.get("thirty")}))
+            await self.bus.publish(Event("sound", {"cue": "thirty", "file": sounds.get("thirty"), "play_id": now_ms()}))
+
+        if not self._five_fired and self.remaining_ms <= 5_000:
+            self._five_fired = True
+            await self.bus.publish(Event("sound", {"cue": "five", "file": sounds.get("five"), "play_id": now_ms()}))
 
     async def _advance_level(self, settings: dict) -> None:
         levels = settings.get("levels", [])
         if not levels:
             return
         sounds = (settings.get("sounds") or {})
-        await self.bus.publish(Event("sound", {"cue": "end", "file": sounds.get("end")}))
+        await self.bus.publish(Event("sound", {"cue": "end", "file": sounds.get("end"), "play_id": now_ms()}))
         await self._announce("level_end", {"level_index": self.current_level_index})
 
         if self.current_level_index < len(levels) - 1:

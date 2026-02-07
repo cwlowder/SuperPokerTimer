@@ -14,6 +14,7 @@ export type Settings = {
     start: string | null;
     half: string | null;
     thirty: string | null;
+    five: string | null;
     end: string | null;
   };
 };

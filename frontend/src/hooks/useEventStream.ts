@@ -4,7 +4,7 @@ import { Announcement, Settings, State } from "../types";
 type WSMsg =
   | { type: "state"; payload: { settings: Settings; state: State } }
   | { type: "tick"; payload: Partial<State> }
-  | { type: "sound"; payload: { file: string | null } }
+  | { type: "sound"; payload: { file: string | null; play_id: number } }
   | { type: "announcement"; payload: Announcement }
   | { type: "ping"; payload: {} };
 
@@ -21,13 +21,13 @@ let retry = 0;
 let store: {
   settings: Settings | null;
   state: State | null;
-  lastSoundFile: string | null;
+  lastSound:  {file: string | null; playId: number } | null;
   announcements: Announcement[];
   connected: boolean;
 } = {
   settings: null,
   state: null,
-  lastSoundFile: null,
+  lastSound: null,
   announcements: [],
   connected: false
 };
@@ -100,7 +100,8 @@ function ensureSocket() {
         }
 
         if (msg.type === "sound") {
-          store.lastSoundFile = msg.payload.file ?? null;
+          console.log(msg.payload);
+          store.lastSound = msg.payload ? {file: msg.payload.file, playId: msg.payload.play_id} : null;
           emit();
           return;
         }
@@ -123,7 +124,7 @@ function ensureSocket() {
 export function useEventStream() {
   const [settings, setSettings] = useState<Settings | null>(store.settings);
   const [state, setState] = useState<State | null>(store.state);
-  const [lastSoundFile, setLastSoundFile] = useState<string | null>(store.lastSoundFile);
+  const [lastSound, setLastSound] = useState<{ file: string | null; playId: number } | null>(store.lastSound);
   const [announcements, setAnnouncements] = useState<Announcement[]>(store.announcements);
   const [connected, setConnected] = useState(store.connected);
 
@@ -131,7 +132,7 @@ export function useEventStream() {
     const fn = (s: typeof store) => {
       setSettings(s.settings);
       setState(s.state);
-      setLastSoundFile(s.lastSoundFile);
+      setLastSound(s.lastSound);
       setAnnouncements(s.announcements);
       setConnected(s.connected);
     };
@@ -160,5 +161,5 @@ export function useEventStream() {
     };
   }, []);
 
-  return { settings, state, lastSoundFile, announcements, connected };
+  return { settings, state, lastSound, announcements, connected };
 }

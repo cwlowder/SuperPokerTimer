@@ -56,7 +56,7 @@ DEFAULT_SETTINGS = {
     {"type": "break",   "minutes": 5,  "small_blind_cents": 0,   "big_blind_cents": 0,   "ante_cents": 0},
     {"type": "regular", "minutes": 15, "small_blind_cents": 300, "big_blind_cents": 600, "ante_cents": 0}
   ],
-  "sounds": {"start": None, "half": None, "thirty": None, "end": None}
+  "sounds": {"start": None, "half": None, "thirty": None, "five": None, "end": None}
 }
 
 DEFAULT_STATE = {

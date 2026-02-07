@@ -1,6 +1,12 @@
 import { useEffect } from "react";
 
-export default function SoundPlayer({ file }: { file: string | null }) {
+export default function SoundPlayer({
+  file,
+  playId,
+}: {
+  file: string | null;
+  playId?: number; // optional for local previews
+}) {
   useEffect(() => {
     if (!file) return;
     const url = `/sounds/${encodeURIComponent(file)}`;
@@ -10,7 +16,7 @@ export default function SoundPlayer({ file }: { file: string | null }) {
     return () => {
       try { audio.pause(); } catch {}
     };
-  }, [file]);
+  }, [file, playId]); // ✅ playId forces replay even if file same
 
   return null;
 }
