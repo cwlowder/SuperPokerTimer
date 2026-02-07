@@ -51,10 +51,26 @@ CREATE TABLE IF NOT EXISTS announcements (
 
 DEFAULT_SETTINGS = {
   "levels": [
-    {"type": "regular", "minutes": 15, "small_blind_cents": 100, "big_blind_cents": 200, "ante_cents": 0},
-    {"type": "regular", "minutes": 15, "small_blind_cents": 200, "big_blind_cents": 400, "ante_cents": 0},
-    {"type": "break",   "minutes": 5,  "small_blind_cents": 0,   "big_blind_cents": 0,   "ante_cents": 0},
-    {"type": "regular", "minutes": 15, "small_blind_cents": 300, "big_blind_cents": 600, "ante_cents": 0}
+    {"type": "regular", "minutes": 20, "small_blind_cents": 10, "big_blind_cents": 20, "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 20, "big_blind_cents": 40, "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 50, "big_blind_cents": 100, "ante_cents": 0},
+    {"type": "break",   "minutes": 10,  "small_blind_cents": 0,   "big_blind_cents": 0,   "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 100, "big_blind_cents": 200, "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 150, "big_blind_cents": 300, "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 250, "big_blind_cents": 500, "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 400, "big_blind_cents": 800, "ante_cents": 0},
+    {"type": "break",   "minutes": 10,  "small_blind_cents": 0,   "big_blind_cents": 0,   "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 700, "big_blind_cents": 1400, "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 1250, "big_blind_cents": 2500, "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 2000, "big_blind_cents": 4000, "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 3500, "big_blind_cents": 7000, "ante_cents": 0},
+    {"type": "regular", "minutes": 20, "small_blind_cents": 7000, "big_blind_cents": 14000, "ante_cents": 0},
+
+    # {"type": "regular", "minutes": 30, "small_blind_cents": 50, "big_blind_cents": 100, "ante_cents": 0},
+    # {"type": "regular", "minutes": 30, "small_blind_cents": 100, "big_blind_cents": 200, "ante_cents": 0},
+    # {"type": "break",   "minutes": 5,  "small_blind_cents": 0,   "big_blind_cents": 0,   "ante_cents": 0},
+    # {"type": "regular", "minutes": 30, "small_blind_cents": 250, "big_blind_cents": 500, "ante_cents": 0},
+    # {"type": "regular", "minutes": 15, "small_blind_cents": 300, "big_blind_cents": 600, "ante_cents": 0}
   ],
   "sounds": {"start": None, "half": None, "thirty": None, "five": None, "end": None}
 }

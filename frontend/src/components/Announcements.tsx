@@ -42,7 +42,7 @@ export default function Announcements({
 
                   {Array.isArray(a.payload?.changes) && a.payload.changes.length > 0 ? (
                     <ul style={{ margin: "6px 0 0 18px" }}>
-                      {a.payload.changes.slice(0, compact ? 8 : 50).map((c: any, idx: number) => {
+                      {a.payload.changes.slice(0, compact ? 50 : 500).map((c: any, idx: number) => {
                         const p = playersById[c.player_id]?.name ?? c.name ?? c.player_id;
                         const toT = tablesById[c.to_table]?.name ?? c.to_table;
                         const fromT = c.from_table ? (tablesById[c.from_table]?.name ?? c.from_table) : null;
@@ -64,9 +64,24 @@ export default function Announcements({
                     <div className="muted" style={{ marginTop: 6 }}>No seat changes.</div>
                   )}
                 </div>
+              ) : a.type === "randomize" ? (
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ fontWeight: 700 }}>Seating randomized</div>
+                  <div className="muted" style={{ marginTop: 6 }}>
+                    {a.payload?.message ?? "Players were randomly assigned to available seats."}
+                  </div>
+                </div>
+              ) : a.type === "deseat" ? (
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ fontWeight: 700 }}>All players removed from seats</div>
+                  <div className="muted" style={{ marginTop: 6 }}>
+                    {a.payload?.message ?? "All seats are now empty."}
+                  </div>
+                </div>
               ) : (
                 <div style={{ marginTop: 6 }} className="muted">{JSON.stringify(a.payload)}</div>
               )}
+
             </div>
           ))}
         </div>

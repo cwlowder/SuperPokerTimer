@@ -7,7 +7,7 @@ import aiosqlite
 from .db import get_settings, set_settings, get_state, list_announcements
 from .events import EventBus
 from .timer import TimerService
-from .seating import randomize_seating, rebalance, normalize_seats
+from .seating import randomize_seating, rebalance, deseat_seating, normalize_seats
 
 router = APIRouter()
 
@@ -267,6 +267,12 @@ async def seating_rebalance(request: Request):
     conn: aiosqlite.Connection = request.app.state.db
     bus: EventBus = request.app.state.bus
     return await rebalance(conn, bus)
+
+@router.post("/seating/deseat")
+async def deseat(request: Request):
+    conn: aiosqlite.Connection = request.app.state.db
+    bus: EventBus = request.app.state.bus
+    return await deseat_seating(conn, bus)
 
 @router.get("/announcements")
 async def announcements(request: Request, limit: int = 50):

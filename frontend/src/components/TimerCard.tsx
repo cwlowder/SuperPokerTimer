@@ -16,7 +16,9 @@ export default function TimerCard({ state, levels, bigPic = false }: { state: St
   const blindSize = bigPic ? 64 : 26; 
 
   return (
-    <div className="card">
+    <div className="card"
+     style={cur?.type === "break" ? { backgroundColor: "rgba(255, 235, 130, 0.15)" } : undefined}
+    >
       <div className="row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
         <div>
           <span className="badge">{typeLabel} {idx + 1} / {levels.length}</span>{" "}
@@ -30,21 +32,30 @@ export default function TimerCard({ state, levels, bigPic = false }: { state: St
       <div className="row" style={{ marginTop: 10, alignItems: "center" }}>
         <div className="col">
           <div className="muted" style={{ marginBottom: 6 }}>Blinds</div>
-          {cur?.type === "break" ? (
-            <div className={`${blindClass}`}>—</div>
-          ) : (
-            <div className={`${blindClass}`}>
-              <MoneyDisplay cents={cur?.small_blind_cents ?? 0} size={blindSize} />
-              <span className="muted"> / </span>
-              <MoneyDisplay cents={cur?.big_blind_cents ?? 0} size={blindSize} />
-              {cur?.ante_cents ? (
-                <>
-                  <span className="muted"> • Ante </span>
-                  <MoneyDisplay cents={cur.ante_cents} size={blindSize} muted />
-                </>
-              ) : null}
-            </div>
-          )}
+          <div
+            style={{
+              border: "1px solid rgba(255,255,255,0.3)",
+              borderRadius: 10,
+              padding: "10px 14px",
+              background: "rgba(255,255,255,0.03)",
+            }}
+          >
+            {cur?.type === "break" ? (
+              <div className={`${blindClass}`}>—</div>
+            ) : (
+              <div className={`${blindClass}`}>
+                <MoneyDisplay cents={cur?.small_blind_cents ?? 0} size={blindSize} />
+                <span className="muted"> / </span>
+                <MoneyDisplay cents={cur?.big_blind_cents ?? 0} size={blindSize} />
+                {cur?.ante_cents ? (
+                  <>
+                    <span className="muted"> • Ante </span>
+                    <MoneyDisplay cents={cur.ante_cents} size={blindSize} muted />
+                  </>
+                ) : null}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="col">

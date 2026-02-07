@@ -85,15 +85,15 @@ async def randomize_seating(conn: aiosqlite.Connection, bus: EventBus) -> dict[s
     changes = []
     for p, slot in zip(players, slots):
         old = prev_map.get(p["id"])
-        if old != slot:
-            changes.append({
-                "player_id": p["id"],
-                "name": p["name"],
-                "from_table": old[0] if old else None,
-                "from_seat": old[1] if old else None,
-                "to_table": slot[0],
-                "to_seat": slot[1],
-            })
+        # if old != slot:
+        changes.append({
+            "player_id": p["id"],
+            "name": p["name"],
+            "from_table": old[0] if old else None,
+            "from_seat": old[1] if old else None,
+            "to_table": slot[0],
+            "to_seat": slot[1],
+        })
 
     ts = now_ms()
     payload = {"message": "Randomized seating.", "changes": changes}
@@ -182,4 +182,64 @@ async def rebalance(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]
     payload = {"message": "Rebalanced tables.", "changes": changes}
     await add_announcement(conn, created_at_ms=ts, type="rebalance", payload=payload)
     await bus.publish(Event("announcement", {"type": "rebalance", "payload": payload, "created_at_ms": ts}))
+    return payload
+
+
+async def deseat_seating(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]:
+    # Capture previous assignments (for announcements)
+    prev = await get_assignments(conn)
+    prev_map = {
+        a["player_id"]: (a["table_id"], a["seat_num"])
+        for a in prev
+        if a["player_id"]
+    }
+
+    if not prev_map:
+        payload = {"message": "No seated players.", "changes": []}
+        ts = now_ms()
+        await add_announcement(conn, created_at_ms=ts, type="deseat", payload=payload)
+        await bus.publish(Event("announcement", {
+            "type": "deseat",
+            "payload": payload,
+            "created_at_ms": ts,
+        }))
+        return payload
+
+    # Clear all seat assignments
+    await clear_all_assignments(conn)
+    await conn.commit()
+
+    # Build changes list (everyone goes to nowhere)
+    changes = []
+    for player_id, (table_id, seat_num) in prev_map.items():
+        changes.append({
+            "player_id": player_id,
+            "from_table": table_id,
+            "from_seat": seat_num,
+            "to_table": None,
+            "to_seat": None,
+        })
+
+    ts = now_ms()
+    payload = {
+        "message": "All players removed from seats.",
+        "changes": changes,
+    }
+
+    await add_announcement(
+        conn,
+        created_at_ms=ts,
+        type="deseat",
+        payload=payload,
+    )
+
+    await bus.publish(Event(
+        "announcement",
+        {
+            "type": "deseat",
+            "payload": payload,
+            "created_at_ms": ts,
+        }
+    ))
+
     return payload
