@@ -43,6 +43,9 @@ export default function AdminPage() {
   const [soundPreview, setSoundPreview] = useState<{ file: string | null; playId: number } | null>(null);
   const [levelsDraft, setLevelsDraft] = useState<Level[]>([]);
   const [levelsDirty, setLevelsDirty] = useState(false);
+  const [dragPid, setDragPid] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState<string | null>(null); // `${tableId}:${seatNum}`
+
 
   useEffect(() => {
     if (!settings) return;
@@ -134,6 +137,11 @@ export default function AdminPage() {
   const doDeseat = async () => {
     await apiPost("/api/seating/deseat");
     await reload()
+  };
+
+  const moveSeat = async (playerId: string, toTableId: string, toSeatNum: number) => {
+    await apiPost("/api/seating/move", { player_id: playerId, to_table_id: toTableId, to_seat_num: toSeatNum, mode: "swap" });
+    await reload();
   };
 
   // ---- Settings ----
@@ -497,24 +505,65 @@ export default function AdminPage() {
                   >
                     {(seatsByTable[t.id] ?? []).map((s) => {
                       const p = s.player_id ? playersById[s.player_id] : null;
+                      const key = `${s.table_id}:${s.seat_num}`;
+                      const isOver = dragOver === key;
+                      const isDragging = dragPid === (p?.id ?? "");
+
                       return (
                         <div
-                          key={`${s.table_id}:${s.seat_num}`}
+                          key={key}
+                          // ✅ make the whole card draggable if it has a player
+                          draggable={!!p}
+                          onDragStart={(e) => {
+                            if (!p) return;
+                            setDragPid(p.id);
+                            e.dataTransfer.setData("text/player-id", p.id);
+                            e.dataTransfer.effectAllowed = "move";
+                          }}
+                          onDragEnd={() => {
+                            setDragPid(null);
+                            setDragOver(null);
+                          }}
+
+                          // ✅ drop target handlers
+                          onDragOver={(e) => {
+                            e.preventDefault(); // REQUIRED to allow drop
+                            setDragOver(key);
+                          }}
+                          onDragLeave={() => setDragOver((cur) => (cur === key ? null : cur))}
+                          onDrop={async (e) => {
+                            e.preventDefault();
+                            const playerId = e.dataTransfer.getData("text/player-id") || dragPid;
+                            setDragOver(null);
+                            setDragPid(null);
+                            if (!playerId) return;
+                            await moveSeat(playerId, s.table_id, s.seat_num);
+                          }}
+
                           style={{
                             padding: 10,
                             borderRadius: 10,
-                            border: "1px solid rgba(255,255,255,0.10)"
+                            border: "1px solid rgba(255,255,255,0.10)",
+                            outline: isOver ? "2px solid rgba(120,200,255,0.6)" : "none",
+                            background: isOver ? "rgba(120,200,255,0.08)" : "transparent",
+                            opacity: isDragging ? 0.55 : 1,
+                            cursor: p ? "grab" : "default",
+                            userSelect: "none",
+                            transition: "background 120ms ease, outline 120ms ease, opacity 120ms ease",
                           }}
+                          title={p ? "Drag to move (drops swap by default)" : "Drop a player here"}
                         >
                           <div className="muted" style={{ fontSize: 12 }}>
                             Seat {s.seat_num}
                           </div>
+
                           <div style={{ fontWeight: 800, opacity: p?.eliminated ? 0.6 : 1 }}>
                             {p ? p.name : <span className="muted">—</span>}
                           </div>
                         </div>
                       );
                     })}
+
                   </div>
                 </div>
               </div>

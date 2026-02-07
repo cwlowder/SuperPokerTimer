@@ -274,6 +274,85 @@ async def deseat(request: Request):
     bus: EventBus = request.app.state.bus
     return await deseat_seating(conn, bus)
 
+@router.post("/seating/move")
+async def move_seat(request: Request, payload: dict[str, Any]):
+    """
+    payload:
+      {
+        "player_id": "uuid",
+        "to_table_id": "uuid",
+        "to_seat_num": 3,
+        "mode": "swap" | "move"   # optional; default swap
+      }
+    """
+    conn: aiosqlite.Connection = request.app.state.db
+
+    player_id = payload.get("player_id")
+    to_table_id = payload.get("to_table_id")
+    to_seat_num = int(payload.get("to_seat_num"))
+    mode = payload.get("mode") or "swap"
+
+    if not player_id or not to_table_id:
+        raise HTTPException(400, "player_id and to_table_id required")
+
+    # destination seat exists?
+    cur = await conn.execute(
+        "SELECT player_id FROM seat_assignments WHERE table_id=? AND seat_num=?",
+        (to_table_id, to_seat_num),
+    )
+    row = await cur.fetchone()
+    if row is None:
+        raise HTTPException(404, "Seat not found")
+    dest_player_id = row[0]
+
+    # find source seat (player must be seated somewhere, otherwise it's just a place)
+    cur = await conn.execute(
+        "SELECT table_id, seat_num FROM seat_assignments WHERE player_id=?",
+        (player_id,),
+    )
+    src = await cur.fetchone()
+    src_table_id, src_seat_num = (src[0], src[1]) if src else (None, None)
+
+    # If dropping onto same seat, noop
+    if src_table_id == to_table_id and src_seat_num == to_seat_num:
+        return {"ok": True, "mode": "noop"}
+
+    if mode == "move":
+        # Move into dest, kicking out dest occupant (they become unseated)
+        await conn.execute(
+            "UPDATE seat_assignments SET player_id=NULL WHERE table_id=? AND seat_num=?",
+            (to_table_id, to_seat_num),
+        )
+        await conn.execute(
+            "UPDATE seat_assignments SET player_id=? WHERE table_id=? AND seat_num=?",
+            (player_id, to_table_id, to_seat_num),
+        )
+        if src_table_id is not None:
+            await conn.execute(
+                "UPDATE seat_assignments SET player_id=NULL WHERE table_id=? AND seat_num=?",
+                (src_table_id, src_seat_num),
+            )
+    else:
+        # swap (default): swap with whoever is in dest (including empty)
+        if src_table_id is not None:
+            await conn.execute(
+                "UPDATE seat_assignments SET player_id=? WHERE table_id=? AND seat_num=?",
+                (dest_player_id, src_table_id, src_seat_num),
+            )
+        await conn.execute(
+            "UPDATE seat_assignments SET player_id=? WHERE table_id=? AND seat_num=?",
+            (player_id, to_table_id, to_seat_num),
+        )
+
+    await conn.commit()
+    return {
+        "ok": True,
+        "mode": mode,
+        "from": {"table_id": src_table_id, "seat_num": src_seat_num},
+        "to": {"table_id": to_table_id, "seat_num": to_seat_num},
+        "swapped_player_id": dest_player_id,
+    }
+
 @router.get("/announcements")
 async def announcements(request: Request, limit: int = 50):
     conn: aiosqlite.Connection = request.app.state.db

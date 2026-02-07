@@ -1,4 +1,4 @@
-# Poker Tourney Timer + Seating (Freezeout)
+# Super Poker Timer
 
 A LAN-friendly web app for running **freezeout** poker tournaments:
 - Blind/level timer (regular + break levels)
