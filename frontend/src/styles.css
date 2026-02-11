@@ -69,3 +69,7 @@ hr { border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 12px 0;
 .muted { opacity: 0.8; }
 .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } .big { font-size: 48px; } }
+
+.timer {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}

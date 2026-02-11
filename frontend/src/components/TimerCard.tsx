@@ -3,7 +3,18 @@ import MoneyDisplay from "./MoneyDisplay";
 import { msToClock } from "../utils/time";
 import { Level, State } from "../types";
 
-export default function TimerCard({ state, levels, bigPic = false }: { state: State; levels: Level[], bigPic: False }) {
+export default function TimerCard({
+  state,
+  levels,
+  remainingMs,
+  bigPic = false
+}: {
+  state: State;
+  levels: Level[];
+  remainingMs: number;
+  bigPic?: boolean;
+}) {
+  const rem_time = Math.max(0, remainingMs ?? 0);
   const idx = Math.min(Math.max(state.current_level_index, 0), Math.max(levels.length - 1, 0));
   const cur = levels[idx];
   const next = levels[idx + 1];
@@ -11,33 +22,40 @@ export default function TimerCard({ state, levels, bigPic = false }: { state: St
   const typeLabel = cur?.type === "break" ? "Break" : "Level";
   const runBadge = state.running ? "Running" : "Paused";
 
-  const timerClass = bigPic ? "gigantic" : "big"; 
-  const blindClass = bigPic ? "gigantic-sub" : "big-sub"; 
-  const blindSize = bigPic ? 64 : 26; 
+  const timerClass = bigPic ? "gigantic" : "big";
+  const blindClass = bigPic ? "gigantic-sub" : "big-sub";
+  const blindSize = bigPic ? 64 : 26;
 
   return (
-    <div className="card"
-     style={cur?.type === "break" ? { backgroundColor: "rgba(255, 235, 130, 0.15)" } : undefined}
+    <div
+      className="card"
+      style={cur?.type === "break" ? { backgroundColor: "rgba(255, 235, 130, 0.15)" } : undefined}
     >
       <div className="row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
         <div>
-          <span className="badge">{typeLabel} {idx + 1} / {levels.length}</span>{" "}
+          <span className="badge">
+            {typeLabel} {idx + 1} / {levels.length}
+          </span>{" "}
           <span className="badge">{runBadge}</span>
         </div>
         <div className="muted">Remaining</div>
       </div>
 
-      <div style={{ marginTop: 10 }} className={`${timerClass}`}>{msToClock(state.remaining_ms)}</div>
+      <div style={{ marginTop: 10 }} className={`timer ${timerClass}`}>
+        {msToClock(rem_time)}
+      </div>
 
       <div className="row" style={{ marginTop: 10, alignItems: "center" }}>
         <div className="col">
-          <div className="muted" style={{ marginBottom: 6 }}>Blinds</div>
+          <div className="muted" style={{ marginBottom: 6 }}>
+            Blinds
+          </div>
           <div
             style={{
               border: "1px solid rgba(255,255,255,0.3)",
               borderRadius: 10,
               padding: "10px 14px",
-              background: "rgba(255,255,255,0.03)",
+              background: "rgba(255,255,255,0.03)"
             }}
           >
             {cur?.type === "break" ? (
@@ -59,7 +77,9 @@ export default function TimerCard({ state, levels, bigPic = false }: { state: St
         </div>
 
         <div className="col">
-          <div className="muted" style={{ marginBottom: 6 }}>Next</div>
+          <div className="muted" style={{ marginBottom: 6 }}>
+            Next
+          </div>
           {next ? (
             next.type === "break" ? (
               <div className={`muted ${blindClass}`}>Break ({next.minutes} min)</div>

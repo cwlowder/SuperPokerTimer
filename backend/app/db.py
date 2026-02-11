@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS tourney_state (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   current_level_index INTEGER NOT NULL,
   remaining_ms INTEGER NOT NULL,
+  finish_at_server_ms INTEGER NOT NULL DEFAULT 0,
   running INTEGER NOT NULL,
   updated_at_ms INTEGER NOT NULL
 );
@@ -78,6 +79,7 @@ DEFAULT_SETTINGS = {
 DEFAULT_STATE = {
   "current_level_index": 0,
   "remaining_ms": DEFAULT_SETTINGS["levels"][0]["minutes"] * 60_000,
+  "finish_at_server_ms": 0,
   "running": 0,
   "updated_at_ms": 0
 }
@@ -100,8 +102,14 @@ async def _ensure_defaults(conn: aiosqlite.Connection) -> None:
     row = await cur.fetchone()
     if not row:
         await conn.execute(
-            "INSERT INTO tourney_state (id, current_level_index, remaining_ms, running, updated_at_ms) VALUES (1, ?, ?, ?, ?)",
-            (DEFAULT_STATE["current_level_index"], DEFAULT_STATE["remaining_ms"], DEFAULT_STATE["running"], DEFAULT_STATE["updated_at_ms"])
+            "INSERT INTO tourney_state (id, current_level_index, remaining_ms, finish_at_server_ms, running, updated_at_ms) VALUES (1, ?, ?, ?, ?, ?)",
+            (
+                DEFAULT_STATE["current_level_index"],
+                DEFAULT_STATE["remaining_ms"],
+                DEFAULT_STATE["finish_at_server_ms"],
+                DEFAULT_STATE["running"],
+                DEFAULT_STATE["updated_at_ms"],
+            )
         )
     await conn.commit()
 
@@ -115,14 +123,22 @@ async def set_settings(conn: aiosqlite.Connection, settings: dict[str, Any]) -> 
     await conn.commit()
 
 async def get_state(conn: aiosqlite.Connection) -> dict[str, Any]:
-    cur = await conn.execute("SELECT current_level_index, remaining_ms, running, updated_at_ms FROM tourney_state WHERE id=1")
+    cur = await conn.execute("SELECT current_level_index, remaining_ms, finish_at_server_ms, running, updated_at_ms FROM tourney_state WHERE id=1")
     row = await cur.fetchone()
     return dict(row)
 
-async def set_state(conn: aiosqlite.Connection, *, current_level_index: int, remaining_ms: int, running: int, updated_at_ms: int) -> None:
+async def set_state(
+    conn: aiosqlite.Connection,
+    *,
+    current_level_index: int,
+    remaining_ms: int,
+    finish_at_server_ms: int,
+    running: int,
+    updated_at_ms: int
+) -> None:
     await conn.execute(
-        "UPDATE tourney_state SET current_level_index=?, remaining_ms=?, running=?, updated_at_ms=? WHERE id=1",
-        (current_level_index, remaining_ms, running, updated_at_ms)
+        "UPDATE tourney_state SET current_level_index=?, remaining_ms=?, finish_at_server_ms=?, running=?, updated_at_ms=? WHERE id=1",
+        (current_level_index, remaining_ms, finish_at_server_ms, running, updated_at_ms)
     )
     await conn.commit()
 

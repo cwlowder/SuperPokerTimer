@@ -35,7 +35,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("timer");
 
   // ✅ Live data via WebSocket hook
-  const { settings, state, lastSound, announcements: liveAnnouncements, connected } = useEventStream();
+  const { settings, state, remainingMs, lastSound, announcements: liveAnnouncements, connected } = useEventStream();
 
   const [search, setSearch] = useState("");
   const [newPlayer, setNewPlayer] = useState("");
@@ -267,7 +267,7 @@ export default function AdminPage() {
         <div className="row" style={{ marginTop: 12 }}>
           <div className="col">
             {settings && state ? (
-              <TimerCard state={state} levels={settings.levels} />
+              <TimerCard state={state} levels={settings.levels} remainingMs={remainingMs} />
             ) : (
               <div className="card">Loading…</div>
             )}
