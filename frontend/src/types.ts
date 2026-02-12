@@ -21,8 +21,10 @@ export type Settings = {
 
 export type State = {
   current_level_index: number;
+  running: true;
+  server_time_ms: number;
   remaining_ms: number;
-  running: boolean;
+  finish_at_server_ms: number;
 };
 
 export type Player = { id: string; name: string; eliminated: boolean; };

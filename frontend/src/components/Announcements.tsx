@@ -1,9 +1,23 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Announcement, Player, Table } from "../types";
 
 function fmtTs(ms: number) {
   const d = new Date(ms);
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function dedupeAnnouncements(items: Announcement[]): Announcement[] {
+  const seen = new Set<string>();
+  const out: Announcement[] = [];
+
+  for (const a of items) {
+    const key = `${a.type}:${a.created_at_ms}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(a);
+  }
+
+  return out;
 }
 
 export default function Announcements({
@@ -17,7 +31,8 @@ export default function Announcements({
   tablesById: Record<string, Table>;
   compact?: boolean;
 }) {
-  const show = items.slice(0, compact ? 1 : 10);
+  const unique = useMemo(() => dedupeAnnouncements(items), [items]);
+  const show = unique.slice(0, compact ? 1 : 10);
 
   return (
     <div className="card">
@@ -26,12 +41,16 @@ export default function Announcements({
         <span className="muted">{compact ? "Latest" : "Recent"}</span>
       </div>
       <hr />
+
       {show.length === 0 ? (
         <div className="muted">No announcements yet.</div>
       ) : (
         <div style={{ display: "grid", gap: 10 }}>
-          {show.map((a, i) => (
-            <div key={i} style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(255,255,255,0.10)" }}>
+          {show.map((a) => (
+            <div
+              key={`${a.type}:${a.created_at_ms}`}
+              style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(255,255,255,0.10)" }}
+            >
               <div className="muted" style={{ fontSize: 12 }}>
                 {fmtTs(a.created_at_ms)} • <span className="badge">{a.type}</span>
               </div>
@@ -45,23 +64,29 @@ export default function Announcements({
                       {a.payload.changes.slice(0, compact ? 50 : 500).map((c: any, idx: number) => {
                         const p = playersById[c.player_id]?.name ?? c.name ?? c.player_id;
                         const toT = tablesById[c.to_table]?.name ?? c.to_table;
-                        const fromT = c.from_table ? (tablesById[c.from_table]?.name ?? c.from_table) : null;
+                        const fromT = c.from_table
+                          ? tablesById[c.from_table]?.name ?? c.from_table
+                          : null;
 
                         return (
                           <li key={idx} className="muted">
                             <span style={{ fontWeight: 700, color: "#e7eef7" }}>{p}</span>{" "}
                             {fromT ? (
                               <>
-                                from <span className="kbd">{fromT}</span> seat <span className="kbd">{c.from_seat}</span>{" "}
+                                from <span className="kbd">{fromT}</span> seat{" "}
+                                <span className="kbd">{c.from_seat}</span>{" "}
                               </>
                             ) : null}
-                            → <span className="kbd">{toT}</span> seat <span className="kbd">{c.to_seat}</span>
+                            → <span className="kbd">{toT}</span> seat{" "}
+                            <span className="kbd">{c.to_seat}</span>
                           </li>
                         );
                       })}
                     </ul>
                   ) : (
-                    <div className="muted" style={{ marginTop: 6 }}>No seat changes.</div>
+                    <div className="muted" style={{ marginTop: 6 }}>
+                      No seat changes.
+                    </div>
                   )}
                 </div>
               ) : a.type === "randomize" ? (
@@ -79,9 +104,10 @@ export default function Announcements({
                   </div>
                 </div>
               ) : (
-                <div style={{ marginTop: 6 }} className="muted">{JSON.stringify(a.payload)}</div>
+                <div style={{ marginTop: 6 }} className="muted">
+                  {JSON.stringify(a.payload)}
+                </div>
               )}
-
             </div>
           ))}
         </div>

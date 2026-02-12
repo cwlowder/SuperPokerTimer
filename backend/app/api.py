@@ -1,4 +1,4 @@
-import os, json, time, uuid
+import os, json, uuid
 from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -8,11 +8,9 @@ from .db import get_settings, set_settings, get_state, list_announcements
 from .events import EventBus
 from .timer import TimerService
 from .seating import randomize_seating, rebalance, deseat_seating, normalize_seats
+from .utils import now_ms
 
 router = APIRouter()
-
-def now_ms() -> int:
-    return int(time.time() * 1000)
 
 def sse_format(event: str, data: dict[str, Any]) -> str:
     payload = json.dumps(data, separators=(",", ":"))
@@ -81,42 +79,6 @@ async def timer_go_to_level(request: Request, level_index: int):
     timer: TimerService = request.app.state.timer
     await timer.go_to_level(level_index)
     return {"ok": True}
-
-# @router.get("/events")
-# async def events(request: Request):
-#     bus: EventBus = request.app.state.bus
-#     async def gen():
-#         try:
-#             yield sse_format("hello", {"ts": now_ms()})
-
-#             # Keepalive loop: send a comment ping every 15s if nothing else happens
-#             ping_every = 15.0
-#             last_ping = now_ms()
-
-#             async for ev in bus.subscribe():
-#                 if await request.is_disconnected():
-#                     break
-
-#                 yield sse_format(ev.type, ev.payload)
-
-#                 now = now_ms()
-#                 if now - last_ping >= int(ping_every * 1000):
-#                     last_ping = now
-#                     yield ": ping\n\n"
-#         except Exception:
-#             traceback.print_exc()
-#             return
-#     return StreamingResponse(
-#         gen(),
-#         media_type="text/event-stream",
-#         headers={
-#             "Cache-Control": "no-cache",
-#             "Connection": "keep-alive",
-#             "X-Accel-Buffering": "no",  # helps with reverse proxies
-#         },
-#     )
-
-
 
 @router.get("/sounds")
 async def list_sounds(request: Request):

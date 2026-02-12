@@ -8,7 +8,7 @@ import { Player, Table } from "../types";
 
 export default function DisplayPage() {
   const { playersById, tablesById } = useTourneyData();
-  const { settings, state, lastSound, announcements } = useEventStream();
+  const { settings, state, remainingMs, lastSound, announcements } = useEventStream();
 
   // Big picture is read-only, but still plays configured sounds.
   const levels = settings?.levels ?? [];
@@ -27,7 +27,7 @@ export default function DisplayPage() {
 
       <div style={{ marginTop: 12 }}>
         {settings && state ? (
-          <TimerCard state={state} levels={levels} bigPic={true} />
+          <TimerCard state={state} levels={levels} remainingMs={remainingMs} bigPic />
         ) : (
           <div className="card">Loading…</div>
         )}
