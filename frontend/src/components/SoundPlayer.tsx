@@ -1,22 +1,45 @@
+import { Howl } from "howler";
 import { useEffect } from "react";
 
-export default function SoundPlayer({
-  file,
-  playId,
-}: {
+const cache = new Map<string, Howl>();
+
+export function preloadSounds(files: string[]) {
+  for (const file of files) {
+    if (!file) continue;
+
+    const howl = new Howl({
+      src: [`/sounds/${encodeURIComponent(file)}`],
+      preload: true,
+      html5: false,
+      pool: 2
+    });
+
+    cache.set(file, howl);
+  }
+}
+
+export function playSound(file: string | null) {
+  if (!file) return;
+  const howl = cache.get(file);
+  if (howl) howl.play();
+}
+
+
+export default function SoundPlayer({ file, playId, preloadFiles }: {
   file: string | null;
-  playId?: number; // optional for local previews
+  playId?: number;
+  preloadFiles?: string[];
 }) {
   useEffect(() => {
     if (!file) return;
-    const url = `/sounds/${encodeURIComponent(file)}`;
-    const audio = new Audio(url);
-    audio.volume = 1.0;
-    audio.play().catch(() => {});
-    return () => {
-      try { audio.pause(); } catch {}
-    };
-  }, [file, playId]); // ✅ playId forces replay even if file same
+    playSound(file);
+  }, [file, playId]);
+
+  useEffect(() => {
+    if (!preloadFiles) return;
+
+    preloadSounds(preloadFiles);
+  }, [preloadFiles]);
 
   return null;
 }

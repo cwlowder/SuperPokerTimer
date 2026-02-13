@@ -7,6 +7,7 @@ import { Announcement, Player, Seat, Settings, Level, State, Table } from "../ty
 import MoneyDisplay from "../components/MoneyDisplay";
 import { useEventStream } from "../hooks/useEventStream";
 import { useTourneyData } from "../hooks/useTourneyData";
+import { Pause, Play } from 'lucide-react';
 
 type Tab = "timer" | "players" | "tables" | "settings";
 
@@ -146,7 +147,7 @@ export default function AdminPage() {
   };
 
   // ---- Settings ----
-  const setSound = async (cue: "start" | "half" | "thirty" | "five" | "end", file: string | null) => {
+  const setSound = async (cue: "transition" | "half" | "thirty" | "five" | "end", file: string | null) => {
     if (!settings) return;
     const next = { ...settings, sounds: { ...settings.sounds, [cue]: file } };
     await apiPut("/api/settings", next);
@@ -227,7 +228,7 @@ export default function AdminPage() {
 
   return (
     <div className="container">
-      <SoundPlayer file={soundToPlayNow?.file ?? null} playId={soundToPlayNow?.playId} />
+      <SoundPlayer file={soundToPlayNow?.file ?? null} playId={soundToPlayNow?.playId} preloadFiles={sounds}/>
 
       <div className="row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
         <h1 style={{ margin: 0 }}>Poker Tourney Admin</h1>
@@ -267,7 +268,7 @@ export default function AdminPage() {
         <div className="row" style={{ marginTop: 12 }}>
           <div className="col">
             {settings && state ? (
-              <TimerCard state={state} levels={settings.levels} remainingMs={remainingMs} />
+              <TimerCard state={state} levels={settings.levels} remainingMs={remainingMs??0} />
             ) : (
               <div className="card">Loading…</div>
             )}
@@ -275,12 +276,15 @@ export default function AdminPage() {
             <div className="card" style={{ marginTop: 12 }}>
               <h3>Timer Controls</h3>
               <div className="row">
-                <button className="btn primary" onClick={timerResume}>
-                  Resume
-                </button>
-                <button className="btn" onClick={timerPause}>
-                  Pause
-                </button>
+                {(state && !state.running) && (
+                  <button className="btn primary" onClick={timerResume}>
+                    <Play size={12}/>
+                  </button>
+                ) || (
+                  <button className="btn" onClick={timerPause}>
+                    <Pause size={12}/>
+                  </button>
+                )}
                 <button className="btn" onClick={() => timerAdd(60_000)}>
                   +1:00
                 </button>
@@ -582,7 +586,7 @@ export default function AdminPage() {
             <hr />
             {settings ? (
               <div style={{ display: "grid", gap: 10 }}>
-                {(["start", "half", "thirty", "five", "end"] as const).map((cue) => (
+                {(["transition", "half", "thirty", "five", "end"] as const).map((cue) => (
                   <div key={cue} className="grid2">
                     <div>
                       <label>{cue.toUpperCase()}</label>
