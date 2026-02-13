@@ -7,7 +7,7 @@ import { useTourneyData } from "../hooks/useTourneyData";
 import { Player, Table } from "../types";
 
 export default function DisplayPage() {
-  const { playersById, tablesById } = useTourneyData();
+  const { playersById, tablesById, sounds } = useTourneyData();
   const { settings, state, remainingMs, lastSound, announcements } = useEventStream();
 
   // Big picture is read-only, but still plays configured sounds.
@@ -18,7 +18,7 @@ export default function DisplayPage() {
 
   return (
     <div className="container" style={{ maxWidth: 1400 }}>
-      <SoundPlayer file={lastSound?.file ?? null} playId={lastSound?.playId} />
+      <SoundPlayer file={lastSound?.file ?? null} playId={lastSound?.playId} preloadFiles={sounds}/>
 
       <div className="row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
         <h1 style={{ margin: 0 }}>Big Picture</h1>

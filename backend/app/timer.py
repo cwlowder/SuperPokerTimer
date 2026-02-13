@@ -70,7 +70,6 @@ class TimerService:
         self._half_fired = False
         self._thirty_fired = False
         self._five_fired = False
-        self._start_fired = False
 
     async def start(self) -> None:
         if self._task and not self._task.done():
@@ -134,10 +133,6 @@ class TimerService:
         # compute remaining from finish time (no drift)
         self.remaining_ms = self._current_remaining_ms()
 
-        if not self._start_fired:
-            self._start_fired = True
-            await self.bus.publish(Event("sound", {"cue": "start", "file": sounds.get("start"), "play_id": now_ms()}))
-
         if not self._half_fired and self.remaining_ms <= total_ms // 2:
             self._half_fired = True
             await self.bus.publish(Event("sound", {"cue": "half", "file": sounds.get("half"), "play_id": now_ms()}))
@@ -156,10 +151,10 @@ class TimerService:
             return
         sounds = (settings.get("sounds") or {})
 
-        await self.bus.publish(Event("sound", {"cue": "end", "file": sounds.get("end"), "play_id": now_ms()}))
         await self._announce("level_end", {"level_index": self.current_level_index})
 
         if self.current_level_index < len(levels) - 1:
+            await self.bus.publish(Event("sound", {"cue": "transition", "file": sounds.get("transition"), "play_id": now_ms()}))
             self.current_level_index += 1
             nxt = levels[self.current_level_index]
             self.remaining_ms = int(nxt["minutes"]) * 60_000
@@ -169,6 +164,7 @@ class TimerService:
             if self.running:
                 self.finish_at_server_ms = now_ms() + int(self.remaining_ms)
         else:
+            await self.bus.publish(Event("sound", {"cue": "end", "file": sounds.get("end"), "play_id": now_ms()}))
             self.remaining_ms = 0
             self.finish_at_server_ms = 0
             self.running = False
