@@ -1,7 +1,7 @@
 import { Announcement, Player, Settings, Level, Table } from "../../types";
 import Announcements from "../Announcements";
 import TimerCard from "../TimerCard";
-import { Pause, Play } from "lucide-react";
+import { RotateCw, RotateCcw, FastForward, Rewind, TimerReset, Pause, Play } from "lucide-react";
 
 export function TimerTab({
   settings,
@@ -48,22 +48,28 @@ export function TimerTab({
           <h3>Timer Controls</h3>
           <div className="row">
             {state && !state.running ? (
-              <button className="btn primary" onClick={onResume}>
+              <button className="btn primary" onClick={onResume} title={"Resume"}>
                 <Play size={12} />
               </button>
             ) : (
-              <button className="btn" onClick={onPause}>
+              <button className="btn" onClick={onPause} title={"Pause"}>
                 <Pause size={12} />
               </button>
             )}
-            <button className="btn" onClick={() => onAddTime(60_000)}>
-              +1:00
+            <button className="btn" onClick={() => onAddTime(60_000)} title={"+1 min"}>
+              <Rewind size={12} />
             </button>
-            <button className="btn" onClick={() => onAddTime(-60_000)}>
-              -1:00
+            <button className="btn" onClick={() => onAddTime(10_000)} title={"+10 secs"}>
+              <RotateCcw size={12} />
             </button>
-            <button className="btn" onClick={onReset}>
-              Reset level
+            <button className="btn" onClick={() => onAddTime(-10_000)} title={"-10 secs"}>
+              <RotateCw size={12} />
+            </button>
+            <button className="btn" onClick={() => onAddTime(-60_000)} title={"-1 min"}>
+              <FastForward size={12} />
+            </button>
+            <button className="btn" onClick={onReset} title={"reset level"}>
+              <TimerReset size={12} />
             </button>
           </div>
 
@@ -79,18 +85,12 @@ export function TimerTab({
                 {levelSelect}
               </select>
             </div>
-
+{/*
             <div>
               <label>Quick actions</label>
               <div className="row">
-                <button className="btn" onClick={() => onAddTime(10_000)}>
-                  +10s
-                </button>
-                <button className="btn" onClick={() => onAddTime(-10_000)}>
-                  -10s
-                </button>
               </div>
-            </div>
+            </div>*/}
           </div>
         </div>
 
