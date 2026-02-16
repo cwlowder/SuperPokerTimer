@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import TimerCard from "../components/TimerCard";
 import Announcements from "../components/Announcements";
 import SoundPlayer from "../components/SoundPlayer";
+import ConnectionStatus from "../components/ConnectionStatus";
+
 import { useEventStream } from "../hooks/useEventStream";
 import { useTourneyData } from "../hooks/useTourneyData";
 import { Player, Table } from "../types";
@@ -22,12 +24,12 @@ export default function DisplayPage() {
 
       <div className="row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
         <h1 style={{ margin: 0 }}>Big Picture</h1>
-        <div className="muted">Full-screen this tab on your TV.</div>
+        <ConnectionStatus size={25} muted/>
       </div>
 
       <div style={{ marginTop: 12 }}>
         {settings && state ? (
-          <TimerCard state={state} levels={levels} remainingMs={remainingMs} bigPic />
+          <TimerCard state={state} levels={levels} remainingMs={remainingMs ?? 0} bigPic />
         ) : (
           <div className="card">Loading…</div>
         )}

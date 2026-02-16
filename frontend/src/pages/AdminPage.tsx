@@ -15,7 +15,7 @@ import { SettingsTab } from "../components/admin/settingsTab";
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("timer");
 
-  const { settings, state, remainingMs, lastSound, announcements: liveAnnouncements, connected } = useEventStream();
+  const { settings, state, remainingMs, lastSound, announcements: liveAnnouncements, connected, timerStatus } = useEventStream();
 
   const [search, setSearch] = useState("");
   const [newPlayer, setNewPlayer] = useState("");
