@@ -34,23 +34,25 @@ export function AdminHeader({ connected }: { connected: boolean }) {
 export function AdminTabs({
   tab,
   setTab,
+  size=25,
 }: {
   tab: Tab;
   setTab: (t: Tab) => void;
+  size?: number;
 }) {
   return (
     <div className="row" style={{ marginTop: 10, gap: 8 }}>
       <TabButton active={tab === "timer"} onClick={() => setTab("timer")} title={"Timer"}>
-        <Timer size={20} />
+        <Timer size={size} />
       </TabButton>
       <TabButton active={tab === "players"} onClick={() => setTab("players")} title={"Players"}>
-        <UsersRound size={20} />
+        <UsersRound size={size} />
       </TabButton>
       <TabButton active={tab === "tables"} onClick={() => setTab("tables")} title={"Tables"}>
-        <PokerTable size={20} />
+        <PokerTable size={size} />
       </TabButton>
       <TabButton active={tab === "settings"} onClick={() => setTab("settings")} title={"Settings"}>
-        <Settings size={20} />
+        <Settings size={size} />
       </TabButton>
     </div>
   );
