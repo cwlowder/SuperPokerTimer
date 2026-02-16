@@ -76,7 +76,7 @@ export default function ConnectionStatus({
           gap: 6,
           color: wsFinalColor
         }}
-        title={`WebSocket: ${wsLabel}`}
+        title={wsLabel}
       >
         {wsIcon}
       </div>
@@ -89,7 +89,7 @@ export default function ConnectionStatus({
           gap: 6,
           color: timerFinalColor
         }}
-        title={`Timer Sync: ${timerLabel}`}
+        title={timerLabel}
       >
         {timerIcon}
       </div>
