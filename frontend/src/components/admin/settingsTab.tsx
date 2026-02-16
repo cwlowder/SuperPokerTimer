@@ -146,7 +146,7 @@ export function LevelsCard({
         </button>
       </div>
 
-      <div style={{ marginTop: 12, overflowX: "auto" }}>
+      <div style={{ fontSize: 20, marginTop: 12, overflowX: "auto" }}>
         <table className="table">
           <thead>
             <tr>
@@ -234,7 +234,7 @@ export function LevelsCard({
                 >
                   <td>
                     <GripVertical
-                      size={14}
+                      size={20}
                       style={{
                         opacity: 0.28, // more muted
                         display: "block"
@@ -245,7 +245,7 @@ export function LevelsCard({
                   <td className="muted">{idx + 1}</td>
 
                   <td>
-                    <select className="input" value={l.type} onChange={(e) => updateLevel(idx, { type: e.target.value })}>
+                    <select className="input" style={{fontSize: 20}} value={l.type} onChange={(e) => updateLevel(idx, { type: e.target.value })}>
                       <option value="regular">Regular</option>
                       <option value="break">Break</option>
                     </select>
@@ -257,52 +257,26 @@ export function LevelsCard({
                       type="number"
                       min={1}
                       value={l.minutes}
+                      style={{fontSize: 20}}
                       onChange={(e) => updateLevel(idx, { minutes: Number(e.target.value) })}
                     />
                   </td>
 
                   <td>
-                    <input
-                      className="input"
-                      type="number"
-                      min={0}
-                      step={25}
-                      value={l.small_blind_cents ?? 0}
-                      onChange={(e) => updateLevel(idx, { small_blind_cents: Number(e.target.value) })}
-                      disabled={l.type === "break"}
-                    />
                     <div className="muted" style={{ marginTop: 4 }}>
-                      <MoneyDisplay cents={l.small_blind_cents ?? 0} muted />
+                      <MoneyDisplay cents={l.small_blind_cents ?? 0} muted editable/>
                     </div>
                   </td>
 
                   <td>
-                    <input
-                      className="input"
-                      type="number"
-                      min={0}
-                      step={25}
-                      value={l.big_blind_cents ?? 0}
-                      onChange={(e) => updateLevel(idx, { big_blind_cents: Number(e.target.value) })}
-                      disabled={l.type === "break"}
-                    />
                     <div className="muted" style={{ marginTop: 4 }}>
-                      <MoneyDisplay cents={l.big_blind_cents ?? 0} muted />
+                      <MoneyDisplay cents={l.big_blind_cents ?? 0} muted editable/>
                     </div>
                   </td>
 
                   <td>
-                    <input
-                      className="input"
-                      type="number"
-                      min={0}
-                      step={25}
-                      value={l.ante_cents ?? 0}
-                      onChange={(e) => updateLevel(idx, { ante_cents: Number(e.target.value) })}
-                      disabled={l.type === "break"}
-                    />
                     <div className="muted" style={{ marginTop: 4 }}>
-                      <MoneyDisplay cents={l.ante_cents ?? 0} muted />
+                      <MoneyDisplay cents={l.ante_cents ?? 0} muted/>
                     </div>
                   </td>
 

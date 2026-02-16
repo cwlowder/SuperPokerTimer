@@ -22,12 +22,14 @@ let retry = 0;
 let offsetMs = 0; // serverNow ~= Date.now() + offsetMs
 type PongSample = { rtt: number; offset: number; t: number };
 let samples: PongSample[] = [];
-const SAMPLE_WINDOW = 3; // keep last 10 pongs
+const SAMPLE_WINDOW = 3;
 let pingPeriodMs = 2000; // current target period
 
 // Allow stoping of the ping loop
 let pingLooper: number | null = null;
 let stableSinceMs: number | null = null;
+
+let timerStatus: "excelent" | "good" | "neutral" | "bad" | "unknown" =  "unknown";
 
 let offsetEmaAbsErr = 0;   // ms, EMA of |offset - offsetMs|
 let rttEma = 0;            // ms, EMA of RTT
@@ -106,22 +108,26 @@ function updateOffsetFromPong(clientSendMs: number, serverTimeMs: number) {
 
   // If not stable, ping faster
   if (offsetEmaAbsErr > BAD_ERR_MS) {
+    timerStatus = "bad";
     startPingLoop(500); // 2x per second when clearly off
     return;
   }
 
   // If kinda stable, moderate
   if (!isOk) {
+    timerStatus = "neutral";
     startPingLoop(1000);
     return;
   }
 
   // If very stable for 10s, slow down
   if (stableSinceMs != null && now - stableSinceMs > 10_000) {
+    timerStatus = "excelent";
     startPingLoop(5000);
     return;
   }
 
+  timerStatus = "good";
   // Otherwise normal stable rate
   startPingLoop(2000);
 }
@@ -343,5 +349,5 @@ export function useEventStream() {
     };
   }, []);
 
-  return { settings, state, remainingMs, lastSound, announcements, connected, serverNowMs };
+  return { settings, state, remainingMs, lastSound, announcements, connected, serverNowMs, timerStatus };
 }

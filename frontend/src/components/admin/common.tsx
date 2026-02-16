@@ -1,3 +1,5 @@
+import ConnectionStatus from "../ConnectionStatus";
+
 export type Tab = "timer" | "players" | "tables" | "settings";
 
 export function TabButton({
@@ -20,12 +22,7 @@ export function AdminHeader({ connected }: { connected: boolean }) {
   return (
     <div className="row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
       <h1 style={{ margin: 0 }}>Poker Tourney Admin</h1>
-      <div className="muted">
-        WS: <span className="badge">{connected ? "Connected" : "Disconnected"}</span>{" "}
-        <a href="/display" className="badge">
-          Big picture
-        </a>
-      </div>
+      <ConnectionStatus/>
     </div>
   );
 }
