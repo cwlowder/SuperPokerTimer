@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GripVertical } from "lucide-react";
 import { Player, Seat, Table } from "../../types";
 
 export function TablesTab({
@@ -168,11 +169,27 @@ export function TablesTab({
                       }}
                       title={p ? "Drag to move (drops swap by default)" : "Drop a player here"}
                     >
-                      <div className="muted" style={{ fontSize: 12 }}>
-                        Seat {s.seat_num}
-                      </div>
-                      <div style={{ fontWeight: 800, opacity: p?.eliminated ? 0.6 : 1 }}>
-                        {p ? p.name : <span className="muted">—</span>}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {p ? (
+                          <GripVertical
+                            size={14}
+                            style={{
+                              opacity: 0.35,        // more muted
+                              flex: "0 0 auto"
+                            }}
+                          />
+                        ) : (
+                          <div style={{ width: 14, flex: "0 0 auto" }} />
+                        )}
+
+                        <div style={{ minWidth: 0 }}>
+                          <div className="muted" style={{ fontSize: 12 }}>
+                            Seat {s.seat_num}
+                          </div>
+                          <div style={{ fontWeight: 800, opacity: p?.eliminated ? 0.6 : 1 }}>
+                            {p ? p.name : <span className="muted">—</span>}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
