@@ -183,10 +183,11 @@ class TimerService:
                 # derive remaining from finish time
                 self.remaining_ms = max(0, self.finish_at_server_ms - now)
 
-                await self._fire_milestones(settings)
-
                 if self.remaining_ms <= 0:
                     await self._advance_level(settings)
+                else:
+                    # Only fire milestones if we would not advance level
+                    await self._fire_milestones(settings)
 
             if now - self._last_persist_ms >= self._persist_every_ms:
                 self._last_persist_ms = now
