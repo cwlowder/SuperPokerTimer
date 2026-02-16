@@ -4,11 +4,14 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./i18n";
 import "./styles.css";
+import { LocalSettingsProvider } from "./context/LocalSettingsContext";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <LocalSettingsProvider>
+        <App />
+      </LocalSettingsProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
