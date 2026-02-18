@@ -36,7 +36,16 @@ export default function AdminPage() {
   const err = error;
 
   useEffect(() => {
-    if (liveAnnouncements.length > 0) setAnnouncements(liveAnnouncements);
+    if (liveAnnouncements.length === 0) return;
+
+    setAnnouncements((prev) => {
+      const merged = [...liveAnnouncements, ...(prev ?? [])];
+
+      // keep newest first
+      merged.sort((a, b) => b.created_at_ms - a.created_at_ms);
+
+      return merged;
+    });
   }, [liveAnnouncements, setAnnouncements]);
 
   // ---- Timer controls ----

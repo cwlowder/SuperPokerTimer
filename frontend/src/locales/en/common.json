@@ -1,0 +1,193 @@
+{
+  "app": {
+    "title": "Poker Timer"
+  },
+
+  "admin": {
+    "title": "Admin Panel",
+    "tabs": {
+      "timer": "Timer",
+      "players": "Players",
+      "tables": "Tables",
+      "settings": "Settings"
+    }
+  },
+
+  "timer": {
+    "title": "Tournament Timer",
+    "currentLevel": "Current Level",
+    "remaining": "Remaining",
+    "nextLevel": "Next Level",
+    "completed": "Completed",
+    "noMoreLevels": "No more levels",
+    "jumpToLevel": "Jump to Level",
+    "addOneMinute": "+1 min",
+    "removeOneMinute": "-1 min",
+    "addTenSeconds": "+10 secs",
+    "removeTenSeconds": "-10 secs",
+    "controlsTitle": "Timer Controls",
+    "nextMin": "{{min}} min",
+    "breakNextMin": "Break ({{min}} min)",
+    "regular": "Regular",
+    "break": "Break",
+    "running": "Running",
+    "paused": "Paused",
+    "breakText": "Take a Break!",
+    "adminUrlText": "Phone admin URL:"
+  },
+
+  "controls": {
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "reset": "Reset",
+    "bigPicture": "Big Picture Mode",
+    "confirmReset": "Are you sure you want to reset the timer?"
+  },
+
+  "levels": {
+    "title": "Levels",
+    "helpText": "Selecting a sound saves immediately and plays a preview.",
+    "regular": "Regular",
+    "break": "Break",
+    "smallBlind": "Small Blind",
+    "bigBlind": "Big Blind",
+    "ante": "Ante",
+    "duration": "Duration",
+    "noLevel": "No levels yet.",
+    "breakTip": "Tip: Break levels ignore blinds/antes.",
+    "actions": {
+      "save": "Save levels",
+      "delete": "Delete level",
+      "addRegular": "+ Regular level",
+      "addBreak": "+ Break",
+      "remove": "Remove",
+      "moveUp": "Move Up",
+      "moveDown": "Move Down",
+      "discard": "Discard changes"
+    },
+    "columns": {
+      "number": "#",
+      "type": "Type",
+      "minutes": "Minutes",
+      "sb": "SB",
+      "bb": "BB",
+      "ante": "Ante",
+      "actions": "Actions"
+    }
+  },
+
+  "players": {
+    "title": "Players",
+    "addPlayer": "Add Player",
+    "removePlayer": "Remove Player",
+    "search": "Search Players",
+    "searchPlaceholder": "Enter player name...",
+    "searchHint": "Search by name to quickly find a player",
+    "name": "Name",
+    "stack": "Stack",
+    "seat": "Seat",
+    "active_status": "Active",
+    "eliminated_status": "Eliminated",
+    "noPlayers": "No players added",
+    "columns": {
+      "name": "Name",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "actions": {
+      "eliminate": "Eliminate",
+      "delete": "delete",
+      "undo": "Undo"
+    }
+  },
+
+  "tables": {
+    "title": "Tables",
+    "newTableName": "New table name",
+    "seats": "Seats",
+    "seatsCount_one": "{{count}} seat",
+    "seatsCount_other": "{{count}} seats",
+    "seatNumber": "seat {{num}}",
+    "actions": {
+      "add": "Add Table",
+      "enable": "Enable",
+      "disable": "Disable",
+      "delete": "Delete Table",
+      "randomize": "Randomize",
+      "rebalance": "Rebalance",
+      "deseat": "Deseat"
+    },
+    "name": "Table Name",
+    "rename": "Rename",
+    "dragMoveHint": "Drag to reorder tables",
+    "noTables": "No tables configured",
+    "seating": "Seats"
+  },
+
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "startingChips": "Starting Chips",
+    "blindStructure": "Blind Structure",
+    "levelsTitle": "Level Configuration",
+    "save": "Save Settings",
+    "saved": "Settings saved successfully",
+    "autoSave": "Settings are saved automatically"
+  },
+
+  "sound": {
+    "sectionTitle": "Sound Settings",
+    "helpText": "Configure which sounds play during the tournament",
+    "preview": "Preview",
+    "none": "No Sound",
+    "transition": "Play when the level changes",
+    "half": "Play halfway through the level",
+    "thirty": "Play when 30 seconds remain in the level",
+    "five": "Play when 5 seconds remain in the level",
+    "end": "Play when the tournament ends (no more levels)"
+  },
+
+  "announcements": {
+    "title": "Announcements",
+    "latest": "Latest",
+    "recent": "Recent",
+    "seatMove": "<0>{{player}}</0> to <1>{{toTable}}</1> seat <2>{{toSeat}}</2>",
+    "seatMoveWithFrom": "<0>{{player}}</0> from <1>{{fromTable}}</1> seat <2>{{fromSeat}}</2> to <3>{{toTable}}</3> seat <4>{{toSeat}}</4>",
+    "seat": "seat",
+    "from": "from",
+    "noneText": "No announcements yet.",
+    "type": {
+      "deseat": "Seats removed",
+      "level_change": "Level change",
+      "rebalance": "Rebalance seating",
+      "randomize": "Randomized seating",
+      "rebalanceText": "Players were randomly assigned to available seats.",
+      "randomizeText": "Players were randomly assigned to available seats.",
+      "level_reset": "Level reset"
+    },
+    "noSeatChangesText": "No seat changes.",
+    "deseatText": "All players removed from seats",
+    "levelChange": "Advanced from level <0>{{oldLevel}}</0> to <1>{{newLevel}}</1>",
+    "allSeatsEmptyText": "All seats are now empty."
+  },
+
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "save": "Save",
+    "loading": "Loading…",
+    "error": "An error occurred",
+    "success": "Success",
+    "enabled": "enabled",
+    "disabled": "disabled",
+    "level": "Level",
+    "ante": "Ante",
+    "blinds": "Blinds"
+  }
+}
