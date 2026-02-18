@@ -162,13 +162,16 @@ export function LevelsCard({
           </thead>
 
           <tbody>
-            {levelsDraft.map((l: any, idx: number) => {
+            {levelsDraft.map((l: Level, idx: number) => {
               const isDragging = dragIdx === idx;
 
               const isNoop = isDragging && ( 
                  dragOver?.idx === dragIdx
                  || dragOver?.where === "above" && dragOver.idx - 1 === dragIdx
                  || dragOver?.where === "below" && dragOver.idx + 1 === dragIdx);
+
+              const isBreak = l.type === "break";
+              console.log("isBreak", isBreak, l.type);
 
               return (
                 <tr
@@ -214,13 +217,12 @@ export function LevelsCard({
                     moveLevel(from, to);
                   }}
                   style={{
-                    ...(l.type === "break" ? { backgroundColor: "rgba(255, 235, 130, 0.15)" } : undefined),
                     opacity: dragIdx === idx ? 0.55 : 1,
                     transition: "opacity 120ms ease",
                     cursor: "grab",
 
                     outline: isNoop ? "2px solid rgba(120,200,255,0.6)" : "none",
-                    background: isNoop ? "rgba(120,200,255,0.08)" : undefined,
+                    background: isNoop ? "rgba(120,200,255,0.08)" : (isBreak ? "rgba(255, 235, 130, 0.15)": undefined),
 
                     // insertion indicator (line between rows)
                     boxShadow:
@@ -263,21 +265,30 @@ export function LevelsCard({
                   </td>
 
                   <td>
-                    <div className="muted" style={{ marginTop: 4 }}>
-                      <MoneyDisplay cents={l.small_blind_cents ?? 0} muted editable/>
-                    </div>
+                    <MoneyDisplay
+                      cents={l.small_blind_cents ?? 0}
+                      size={20}
+                      editable
+                      onChange={(cents) => updateLevel(idx, { small_blind_cents: cents })}
+                    />
                   </td>
 
                   <td>
-                    <div className="muted" style={{ marginTop: 4 }}>
-                      <MoneyDisplay cents={l.big_blind_cents ?? 0} muted editable/>
-                    </div>
+                    <MoneyDisplay
+                      cents={l.big_blind_cents ?? 0}
+                      size={20}
+                      editable
+                      onChange={(cents) => updateLevel(idx, { big_blind_cents: cents })}
+                    />
                   </td>
 
                   <td>
-                    <div className="muted" style={{ marginTop: 4 }}>
-                      <MoneyDisplay cents={l.ante_cents ?? 0} muted/>
-                    </div>
+                    <MoneyDisplay
+                      cents={l.ante_cents ?? 0}
+                      size={20}
+                      editable
+                      onChange={(cents) => updateLevel(idx, { ante_cents: cents })}
+                    />
                   </td>
 
                   <td>

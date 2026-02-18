@@ -7,6 +7,7 @@ export default function MoneyDisplay({
   muted = false,
   editable = false,
   disabled = false,
+  increment = 0.1,
   onChange
 }: {
   cents: number;
@@ -14,6 +15,7 @@ export default function MoneyDisplay({
   muted?: boolean;
   editable?: boolean;
   disabled?: boolean;
+  increment?: number;
   onChange?: (cents: number) => void;
 }) {
   const { dollars, cents: cc } = centsToMoney(cents);
@@ -29,7 +31,7 @@ export default function MoneyDisplay({
       <input
         className="input"
         type="number"
-        step="0.25"
+        step={increment.toFixed(2)}
         min="0"
         value={draft}
         disabled={disabled}
