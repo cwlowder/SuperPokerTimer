@@ -109,9 +109,9 @@ async def randomize_seating(conn: aiosqlite.Connection, bus: EventBus) -> dict[s
         })
 
     ts = now_ms()
-    payload = {"message": "Randomized seating.", "changes": changes}
-    await add_announcement(conn, created_at_ms=ts, type="rebalance", payload=payload)
-    await bus.publish(Event("announcement", {"type": "rebalance", "payload": payload, "created_at_ms": ts}))
+    payload = {"message": None, "changes": changes}
+    await add_announcement(conn, created_at_ms=ts, type="randomize", payload=payload)
+    await bus.publish(Event("announcement", {"type": "randomize", "payload": payload, "created_at_ms": ts}))
     return payload
 
 async def rebalance(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]:

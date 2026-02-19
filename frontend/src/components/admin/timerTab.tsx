@@ -1,7 +1,8 @@
-import { Announcement, Player, Settings, Level, Table } from "../../types";
+import { Announcement, Player, Settings, Table } from "../../types";
 import Announcements from "../Announcements";
 import TimerCard from "../TimerCard";
 import { RotateCw, RotateCcw, FastForward, Rewind, TimerReset, Pause, Play } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function TimerTab({
   settings,
@@ -28,12 +29,17 @@ export function TimerTab({
   onAddTime: (ms: number) => Promise<any>;
   onGoLevel: (idx: number) => Promise<any>;
 }) {
+  const { t } = useTranslation();
+
   const levelSelect =
-    settings?.levels.map((l, i) => (
-      <option key={i} value={i}>
-        {i + 1}: {l.type.toUpperCase()} • {l.minutes}m
-      </option>
-    )) ?? null;
+    settings?.levels.map((l, i) => {
+      const typeLabel = t(`levels.${l.type}`);
+      return (
+        <option key={i} value={i}>
+          {i + 1}: {typeLabel} • {l.minutes}m
+        </option>
+      );
+    }) ?? null;
 
   return (
     <div className="row" style={{ marginTop: 12 }}>
@@ -41,41 +47,41 @@ export function TimerTab({
         {settings && state ? (
           <TimerCard state={state} levels={settings.levels} remainingMs={remainingMs ?? 0} />
         ) : (
-          <div className="card">Loading…</div>
+          <div className="card">{t("common.loading")}</div>
         )}
 
         <div className="card" style={{ marginTop: 12 }}>
-          <h3>Timer Controls</h3>
+          <h3>{t("timer.controlsTitle")}</h3>
           <div className="row">
             {state && !state.running ? (
-              <button className="btn primary" onClick={onResume} title={"Resume"}>
+              <button className="btn primary" onClick={onResume} title={t("controls.resume")}>
                 <Play size={12} />
               </button>
             ) : (
-              <button className="btn" onClick={onPause} title={"Pause"}>
+              <button className="btn" onClick={onPause} title={t("controls.pause")}>
                 <Pause size={12} />
               </button>
             )}
-            <button className="btn" onClick={() => onAddTime(60_000)} title={"+1 min"}>
+            <button className="btn" onClick={() => onAddTime(60_000)} title={t("timer.addOneMinute")}>
               <Rewind size={12} />
             </button>
-            <button className="btn" onClick={() => onAddTime(10_000)} title={"+10 secs"}>
+            <button className="btn" onClick={() => onAddTime(10_000)} title={t("timer.addTenSeconds")}>
               <RotateCcw size={12} />
             </button>
-            <button className="btn" onClick={() => onAddTime(-10_000)} title={"-10 secs"}>
+            <button className="btn" onClick={() => onAddTime(-10_000)} title={t("timer.removeTenSeconds")}>
               <RotateCw size={12} />
             </button>
-            <button className="btn" onClick={() => onAddTime(-60_000)} title={"-1 min"}>
+            <button className="btn" onClick={() => onAddTime(-60_000)} title={t("timer.removeOneMinute")}>
               <FastForward size={12} />
             </button>
-            <button className="btn" onClick={onReset} title={"reset level"}>
+            <button className="btn" onClick={onReset} title={t("controls.reset")}>
               <TimerReset size={12} />
             </button>
           </div>
 
           <div style={{ marginTop: 10 }} className="grid2">
             <div>
-              <label>Jump to level</label>
+              <label>{t("timer.jumpToLevel")}</label>
               <select
                 className="input"
                 onChange={(e) => onGoLevel(Number(e.target.value))}
@@ -85,7 +91,7 @@ export function TimerTab({
                 {levelSelect}
               </select>
             </div>
-{/*
+            {/*
             <div>
               <label>Quick actions</label>
               <div className="row">
@@ -95,7 +101,7 @@ export function TimerTab({
         </div>
 
         <div style={{ marginTop: 12 }} className="muted">
-          Phone admin URL: <span className="kbd">{window.location.origin}</span>
+          {t("timer.adminUrlText")}: <span className="kbd">{window.location.origin}</span>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { GripVertical } from "lucide-react";
 import { Player, Seat, Table } from "../../types";
+import { useTranslation } from "react-i18next";
 
 export function TablesTab({
   tables,
@@ -35,20 +36,27 @@ export function TablesTab({
   onDeseat: () => Promise<void>;
   onMoveSeat: (playerId: string, toTableId: string, toSeatNum: number) => Promise<void>;
 }) {
+  const { t } = useTranslation();
+
   const [dragPid, setDragPid] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null); // `${tableId}:${seatNum}`
 
   return (
     <div className="card" style={{ marginTop: 12 }}>
-      <h3>Tables & Seating</h3>
+      <h3>{t("tables.title")}</h3>
 
       <div className="grid2" style={{ alignItems: "end" }}>
         <div>
-          <label>New table name</label>
-          <input className="input" value={newTableName} onChange={(e) => setNewTableName(e.target.value)} />
+          <label>{t("tables.newTableName")}</label>
+          <input
+            className="input"
+            value={newTableName}
+            onChange={(e) => setNewTableName(e.target.value)}
+            placeholder={t("tables.name")}
+          />
         </div>
         <div>
-          <label>Seats</label>
+          <label>{t("tables.seats")}</label>
           <input
             className="input"
             type="number"
@@ -62,68 +70,72 @@ export function TablesTab({
 
       <div style={{ marginTop: 10 }} className="row">
         <button className="btn primary" onClick={onAddTable}>
-          Add table
+          {t("tables.actions.add")}
         </button>
         <button className="btn" onClick={onRandomize}>
-          Randomize
+          {t("tables.actions.randomize")}
         </button>
         <button className="btn" onClick={onRebalance}>
-          Rebalance
+          {t("tables.actions.rebalance")}
         </button>
         <button className="btn" onClick={onDeseat}>
-          Deseat
+          {t("tables.actions.deseat")}
         </button>
       </div>
 
       <hr />
 
       <div style={{ display: "grid", gap: 12 }}>
-        {tables.map((t) => (
+        {tables.map((tbl) => (
           <div
-            key={t.id}
+            key={tbl.id}
             style={{ border: "1px solid rgba(255,255,255,0.10)", borderRadius: 12, padding: 12 }}
           >
             <div className="row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
               <div>
                 <div style={{ fontWeight: 800, fontSize: 18 }}>
-                  {t.name} <span className="muted">(seats {t.seats})</span>
+                  {tbl.name} <span className="muted">({t("tables.seatsCount", { count: tbl.seats })})</span>
                 </div>
-                <span className="badge">{t.enabled ? "Enabled" : "Disabled"}</span>
+                <span className="badge">{tbl.enabled ? t("common.enabled") : t("common.disabled")}</span>
               </div>
               <div className="row">
-                <button className="btn" onClick={() => onToggleEnabled(t)}>
-                  {t.enabled ? "Disable" : "Enable"}
+                <button className="btn" onClick={() => onToggleEnabled(tbl)}>
+                  {tbl.enabled ? t("tables.actions.disable") : t("tables.actions.enable")}
                 </button>
-                <button className="btn danger" onClick={() => onDeleteTable(t)}>
-                  Delete
+                <button className="btn danger" onClick={() => onDeleteTable(tbl)}>
+                  {t("common.delete")}
                 </button>
               </div>
             </div>
 
             <div style={{ marginTop: 10 }} className="grid2">
               <div>
-                <label>Rename</label>
-                <input className="input" defaultValue={t.name} onBlur={(e) => onUpdateTable(t, { name: e.target.value })} />
+                <label>{t("tables.rename")}</label>
+                <input
+                  className="input"
+                  defaultValue={tbl.name}
+                  onBlur={(e) => onUpdateTable(tbl, { name: e.target.value })}
+                />
               </div>
               <div>
-                <label>Seats</label>
+                <label>{t("tables.seats")}</label>
                 <input
                   className="input"
                   type="number"
-                  defaultValue={t.seats}
+                  defaultValue={tbl.seats}
                   min={2}
                   max={12}
-                  onBlur={(e) => onUpdateTable(t, { seats: Number(e.target.value) })}
+                  onBlur={(e) => onUpdateTable(tbl, { seats: Number(e.target.value) })}
                 />
               </div>
             </div>
 
             <div style={{ marginTop: 12 }}>
               <div className="muted" style={{ marginBottom: 6 }}>
-                Seats
+                {t("tables.seating")}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8 }}>
-                {(seatsByTable[t.id] ?? []).map((s) => {
+                {(seatsByTable[tbl.id] ?? []).map((s) => {
                   const p = s.player_id ? playersById[s.player_id] : null;
                   const key = `${s.table_id}:${s.seat_num}`;
                   const isOver = dragOver === key;
@@ -167,14 +179,14 @@ export function TablesTab({
                         userSelect: "none",
                         transition: "background 120ms ease, outline 120ms ease, opacity 120ms ease"
                       }}
-                      title={p ? "Drag to move (drops swap by default)" : "Drop a player here"}
+                      title={p ? t("tables.dragMoveHint") : t("tables.dropHint")}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {p ? (
                           <GripVertical
                             size={14}
                             style={{
-                              opacity: 0.35,        // more muted
+                              opacity: 0.35,
                               flex: "0 0 auto"
                             }}
                           />
@@ -184,7 +196,7 @@ export function TablesTab({
 
                         <div style={{ minWidth: 0 }}>
                           <div className="muted" style={{ fontSize: 12 }}>
-                            Seat {s.seat_num}
+                            {t("tables.seatNumber", { num: s.seat_num })}
                           </div>
                           <div style={{ fontWeight: 800, opacity: p?.eliminated ? 0.6 : 1 }}>
                             {p ? p.name : <span className="muted">—</span>}
@@ -199,7 +211,7 @@ export function TablesTab({
           </div>
         ))}
 
-        {tables.length === 0 ? <div className="muted">No tables yet.</div> : null}
+        {tables.length === 0 ? <div className="muted">{t("tables.noTables")}</div> : null}
       </div>
     </div>
   );

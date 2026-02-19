@@ -151,7 +151,7 @@ class TimerService:
             return
         sounds = (settings.get("sounds") or {})
 
-        await self._announce("level_end", {"level_index": self.current_level_index})
+        await self._announce("level_change", {"old_idx": self.current_level_index, "new_idx": self.current_level_index + 1})
 
         if self.current_level_index < len(levels) - 1:
             await self.bus.publish(Event("sound", {"cue": "transition", "file": sounds.get("transition"), "play_id": now_ms()}))
@@ -159,7 +159,6 @@ class TimerService:
             nxt = levels[self.current_level_index]
             self.remaining_ms = int(nxt["minutes"]) * 60_000
             self._reset_milestones()
-            await self._announce("level_start", {"level_index": self.current_level_index})
 
             if self.running:
                 self.finish_at_server_ms = now_ms() + int(self.remaining_ms)
@@ -231,6 +230,8 @@ class TimerService:
         if not levels or self.current_level_index >= len(levels):
             return
 
+        await self._announce("level_reset", None)
+
         self.remaining_ms = int(levels[self.current_level_index]["minutes"]) * 60_000
         self._reset_milestones()
 
@@ -247,6 +248,8 @@ class TimerService:
             return
 
         level_index = max(0, min(int(level_index), len(levels) - 1))
+        await self._announce("level_change", {"old_idx": self.current_level_index, "new_idx": level_index})
+
         self.current_level_index = level_index
         self.remaining_ms = int(levels[level_index]["minutes"]) * 60_000
         self._reset_milestones()

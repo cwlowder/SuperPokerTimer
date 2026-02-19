@@ -2,6 +2,7 @@ import { Level, Settings } from "../../types";
 import MoneyDisplay from "../MoneyDisplay";
 import { GripVertical } from "lucide-react";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function SoundsCard({
   settings,
@@ -14,23 +15,25 @@ export function SoundsCard({
   onSetSound: (cue: "transition" | "half" | "thirty" | "five" | "end", file: string | null) => Promise<void>;
   onPreview: (file: string) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="card">
-      <h3>Sounds</h3>
-      <div className="muted">Selecting a sound saves immediately and plays a preview.</div>
+      <h3>{t("sound.sectionTitle")}</h3>
+      <div className="muted">{t("sound.helpText")}</div>
       <hr />
       {settings ? (
         <div style={{ display: "grid", gap: 10 }}>
           {(["transition", "half", "thirty", "five", "end"] as const).map((cue) => (
             <div key={cue} className="grid2">
               <div>
-                <label>{cue.toUpperCase()}</label>
+                <label>{t(`sound.${cue}`)}</label>
                 <select
                   className="input"
                   value={(settings.sounds as any)[cue] ?? ""}
                   onChange={(e) => onSetSound(cue, e.target.value === "" ? null : e.target.value)}
                 >
-                  <option value="">(None)</option>
+                  <option value="">{t("sound.none")}</option>
                   {sounds.map((f) => (
                     <option key={f} value={f}>
                       {f}
@@ -47,14 +50,14 @@ export function SoundsCard({
                     onPreview(file);
                   }}
                 >
-                  Preview
+                  {t("sound.preview")}
                 </button>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="muted">Loading…</div>
+        <div className="muted">{t("common.loading")}</div>
       )}
     </div>
   );
@@ -75,6 +78,8 @@ export function LevelsCard({
   setLevelsDraft: React.Dispatch<React.SetStateAction<Level[]>>;
   onSave: () => Promise<void>;
 }) {
+  const { t } = useTranslation();
+
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<{ idx: number; where: "above" | "below" } | null>(null);
 
@@ -115,23 +120,19 @@ export function LevelsCard({
 
   return (
     <div className="card">
-      <h3>Levels</h3>
-      <div className="muted">
-        Edit tournament structure here. Money is in <span className="kbd">cents</span> (e.g.{" "}
-        <MoneyDisplay cents={123} size={18} muted />
-        ).
-      </div>
+      <h3>{t("levels.title")}</h3>
+      <div className="muted">{t("levels.helpText")}</div>
       <hr />
 
       <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
         <button className="btn" onClick={() => addLevel("regular")}>
-          + Regular level
+          {t("levels.actions.addRegular")}
         </button>
         <button className="btn" onClick={() => addLevel("break")}>
-          + Break
+          {t("levels.actions.addBreak")}
         </button>
         <button className="btn primary" onClick={onSave} disabled={!settings || !levelsDirty}>
-          Save levels
+          {t("levels.actions.save")}
         </button>
         <button
           className="btn"
@@ -142,7 +143,7 @@ export function LevelsCard({
           }}
           disabled={!settings || !levelsDirty}
         >
-          Discard changes
+          {t("levels.actions.discard")}
         </button>
       </div>
 
@@ -151,13 +152,13 @@ export function LevelsCard({
           <thead>
             <tr>
               <th style={{ width: 44 }} />
-              <th style={{ width: 60 }}>#</th>
-              <th style={{ width: 120 }}>Type</th>
-              <th style={{ width: 120 }}>Minutes</th>
-              <th style={{ width: 140 }}>SB</th>
-              <th style={{ width: 140 }}>BB</th>
-              <th style={{ width: 140 }}>Ante</th>
-              <th style={{ width: 180 }}>Actions</th>
+              <th style={{ width: 60 }}>{t("levels.columns.number")}</th>
+              <th style={{ width: 120 }}>{t("levels.columns.type")}</th>
+              <th style={{ width: 120 }}>{t("levels.columns.minutes")}</th>
+              <th style={{ width: 140 }}>{t("levels.columns.sb")}</th>
+              <th style={{ width: 140 }}>{t("levels.columns.bb")}</th>
+              <th style={{ width: 140 }}>{t("levels.columns.ante")}</th>
+              <th style={{ width: 180 }}>{t("levels.columns.actions")}</th>
             </tr>
           </thead>
 
@@ -165,13 +166,13 @@ export function LevelsCard({
             {levelsDraft.map((l: Level, idx: number) => {
               const isDragging = dragIdx === idx;
 
-              const isNoop = isDragging && ( 
-                 dragOver?.idx === dragIdx
-                 || dragOver?.where === "above" && dragOver.idx - 1 === dragIdx
-                 || dragOver?.where === "below" && dragOver.idx + 1 === dragIdx);
+              const isNoop =
+                isDragging &&
+                (dragOver?.idx === dragIdx ||
+                  (dragOver?.where === "above" && dragOver.idx - 1 === dragIdx) ||
+                  (dragOver?.where === "below" && dragOver.idx + 1 === dragIdx));
 
               const isBreak = l.type === "break";
-              console.log("isBreak", isBreak, l.type);
 
               return (
                 <tr
@@ -193,9 +194,7 @@ export function LevelsCard({
                     const where: "above" | "below" = y < rect.height / 2 ? "above" : "below";
                     setDragOver({ idx, where });
                   }}
-                  onDragLeave={() =>
-                    setDragOver((cur) => (cur && cur.idx === idx ? null : cur))
-                  }
+                  onDragLeave={() => setDragOver((cur) => (cur && cur.idx === idx ? null : cur))}
                   onDrop={(e) => {
                     e.preventDefault();
                     const fromStr = e.dataTransfer.getData("text/level-idx");
@@ -232,13 +231,13 @@ export function LevelsCard({
                           : "inset 0 -2px 0 rgba(120,200,255,0.75)"
                         : "none"
                   }}
-                  title="Drag to reorder levels"
+                  title={t("settings.dragReorderLevels")}
                 >
                   <td>
                     <GripVertical
                       size={20}
                       style={{
-                        opacity: 0.28, // more muted
+                        opacity: 0.28,
                         display: "block"
                       }}
                     />
@@ -247,9 +246,14 @@ export function LevelsCard({
                   <td className="muted">{idx + 1}</td>
 
                   <td>
-                    <select className="input" style={{fontSize: 20}} value={l.type} onChange={(e) => updateLevel(idx, { type: e.target.value })}>
-                      <option value="regular">Regular</option>
-                      <option value="break">Break</option>
+                    <select
+                      className="input"
+                      style={{ fontSize: 20 }}
+                      value={l.type}
+                      onChange={(e) => updateLevel(idx, { type: e.target.value })}
+                    >
+                      <option value="regular">{t("levels.regular")}</option>
+                      <option value="break">{t("levels.break")}</option>
                     </select>
                   </td>
 
@@ -259,7 +263,7 @@ export function LevelsCard({
                       type="number"
                       min={1}
                       value={l.minutes}
-                      style={{fontSize: 20}}
+                      style={{ fontSize: 20 }}
                       onChange={(e) => updateLevel(idx, { minutes: Number(e.target.value) })}
                     />
                   </td>
@@ -293,14 +297,19 @@ export function LevelsCard({
 
                   <td>
                     <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
-                      <button className="btn" onClick={() => moveLevel(idx, idx - 1)} disabled={idx === 0}>
+                      <button className="btn" onClick={() => moveLevel(idx, idx - 1)} disabled={idx === 0} title={t("levels.actions.moveUp")}>
                         ↑
                       </button>
-                      <button className="btn" onClick={() => moveLevel(idx, idx + 1)} disabled={idx === levelsDraft.length - 1}>
+                      <button
+                        className="btn"
+                        onClick={() => moveLevel(idx, idx + 1)}
+                        disabled={idx === levelsDraft.length - 1}
+                        title={t("levels.actions.moveDown")}
+                      >
                         ↓
                       </button>
                       <button className="btn danger" onClick={() => removeLevel(idx)}>
-                        Remove
+                        {t("levels.actions.remove")}
                       </button>
                     </div>
                   </td>
@@ -311,7 +320,7 @@ export function LevelsCard({
             {levelsDraft.length === 0 ? (
               <tr>
                 <td colSpan={8} className="muted">
-                  No levels yet.
+                  {t("levels.noLevels")}
                 </td>
               </tr>
             ) : null}
@@ -320,7 +329,7 @@ export function LevelsCard({
       </div>
 
       <div className="muted" style={{ marginTop: 10 }}>
-        Tip: Break levels ignore blinds/antes.
+        {t("levels.breakTip")}
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ import {
   OctagonPause,
   PauseIcon
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const SECOND_MS = 60_000;
 
@@ -35,6 +36,8 @@ export default function TimerCard({
   remainingMs: number;
   bigPic?: boolean;
 }) {
+  const { t } = useTranslation();
+
   const rem_time = Math.max(0, remainingMs ?? 0);
   const idx = Math.min(Math.max(state.current_level_index, 0), Math.max(levels.length - 1, 0));
   const cur = levels[idx];
@@ -44,8 +47,8 @@ export default function TimerCard({
   const isPaused = !state.running;
   const isEnd = (levels.length - 1) == idx && remainingMs == 0;
 
-  const typeLabel = isBreak ? "Break" : "Level";
-  const runBadge = !isPaused ? "Running" : "Paused";
+  const typeLabel = isBreak ? t("timer.break") : t("common.level");
+  const runBadge = !isPaused ? t("timer.running") : t("timer.paused");
 
   const timerClass = bigPic ? "gigantic" : "big";
   const blindClass = bigPic ? "gigantic-sub" : "big-sub";
@@ -100,7 +103,7 @@ export default function TimerCard({
             </span>{" "}
             <span className="badge">{runBadge}</span>
           </div>
-          <div className="muted">Remaining</div>
+          <div className="muted">{t("timer.remaining")}</div>
         </div>
 
         <div style={{ marginTop: 10 }} className={`timer ${timerClass}`}>
@@ -110,7 +113,7 @@ export default function TimerCard({
         <div className="row" style={{ marginTop: 10, alignItems: "center" }}>
           <div className="col">
             <div className="muted" style={{ marginBottom: 6 }}>
-              Blinds
+              {t("common.blinds")}
             </div>
             <div
               style={{
@@ -121,7 +124,7 @@ export default function TimerCard({
               }}
             >
               {cur?.type === "break" ? (
-                <div className={`${blindClass}`}>Take a Break!</div>
+                <div className={`${blindClass}`}>{t("timer.breakText")}</div>
               ) : (
                 <div className={`${blindClass}`}>
                   <MoneyDisplay cents={cur?.small_blind_cents ?? 0} size={blindSize} />
@@ -129,7 +132,7 @@ export default function TimerCard({
                   <MoneyDisplay cents={cur?.big_blind_cents ?? 0} size={blindSize} />
                   {cur?.ante_cents ? (
                     <>
-                      <span className="muted"> • Ante </span>
+                      <span className="muted"> • {t("common.ante")} </span>
                       <MoneyDisplay cents={cur.ante_cents} size={blindSize} muted />
                     </>
                   ) : null}
@@ -140,17 +143,17 @@ export default function TimerCard({
 
           <div className="col">
             <div className="muted" style={{ marginBottom: 6 }}>
-              Next
+              {t("timer.nextLevel")}
             </div>
             {next ? (
               next.type === "break" ? (
-                <div className={`muted ${blindClass}`}>Break ({next.minutes} min)</div>
+                <div className={`muted ${blindClass}`}>{t("timer.breakNextMin", { min : next.minutes })}</div>
               ) : (
                 <div className={`muted ${blindClass}`}>
                   <MoneyDisplay cents={next.small_blind_cents} size={blindSize} muted />
                   <span className="muted"> / </span>
                   <MoneyDisplay cents={next.big_blind_cents} size={blindSize} muted />
-                  <span className="muted"> • {next.minutes} min</span>
+                  <span className="muted"> • {t("timer.nextMin", { min: next.minutes })}</span>
                 </div>
               )
             ) : (
