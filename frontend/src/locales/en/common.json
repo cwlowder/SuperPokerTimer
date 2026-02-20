@@ -169,7 +169,8 @@
       "randomize": "Randomized seating",
       "rebalanceText": "Players were rebalanced across tables.",
       "randomizeText": "Players were randomly assigned to available seats.",
-      "level_reset": "Level reset"
+      "level_reset": "Level reset",
+      "schedule_complete": "Schedule complete"
     },
     "resetText": "Level reset to beginning.",
     "noSeatChangesText": "No seat changes.",
