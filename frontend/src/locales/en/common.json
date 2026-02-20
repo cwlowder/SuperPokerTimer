@@ -162,10 +162,11 @@
       "level_change": "Level change",
       "rebalance": "Rebalance seating",
       "randomize": "Randomized seating",
-      "rebalanceText": "Players were randomly assigned to available seats.",
+      "rebalanceText": "Players were rebalanced across tables.",
       "randomizeText": "Players were randomly assigned to available seats.",
       "level_reset": "Level reset"
     },
+    "resetText": "Level reset to beginning.",
     "noSeatChangesText": "No seat changes.",
     "deseatText": "All players removed from seats",
     "levelChange": "Advanced from level <0>{{oldLevel}}</0> to <1>{{newLevel}}</1>",

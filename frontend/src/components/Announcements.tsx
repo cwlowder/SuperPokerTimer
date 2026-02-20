@@ -124,10 +124,7 @@ export default function Announcements({
                 </div>
               ) : a.type === "level_reset" ? (
                 <div style={{ marginTop: 6 }}>
-                  <div style={{ fontWeight: 700 }}>{t("announcements.deseatText")}</div>
-                  <div className="muted" style={{ marginTop: 6 }}>
-                    {a.payload?.message ?? t("announcements.allSeatsEmptyText")}
-                  </div>
+                  <div style={{ fontWeight: 700 }}>{t("announcements.resetText")}</div>
                 </div>
               ) : a.type === "level_change" ? (
                 <div style={{ marginTop: 6 }}>
