@@ -18,7 +18,6 @@ export default function AdminPage() {
   const { settings, state, remainingMs, lastSound, announcements: liveAnnouncements, connected, timerStatus } = useEventStream();
 
   const [search, setSearch] = useState("");
-  const [newPlayer, setNewPlayer] = useState("");
   const [newTableName, setNewTableName] = useState("Table 1");
   const [newTableSeats, setNewTableSeats] = useState(9);
   const [soundPreview, setSoundPreview] = useState<{ file: string | null; playId: number } | null>(null);
@@ -56,13 +55,14 @@ export default function AdminPage() {
   const timerGo = async (idx: number) => apiPost(`/api/timer/go_to_level?level_index=${idx}`);
 
   // ---- Players ----
-  const addPlayer = async () => {
-    const name = newPlayer.trim();
+  const addPlayer = async (name?: string) => {
     if (!name) return;
+
     await apiPost("/api/players", { name });
-    setNewPlayer("");
+
     await reload();
   };
+
   const toggleElim = async (p: Player) => {
     await apiPatch(`/api/players/${p.id}`, { eliminated: !p.eliminated });
     await reload();
@@ -170,8 +170,6 @@ export default function AdminPage() {
           players={players}
           search={search}
           setSearch={setSearch}
-          newPlayer={newPlayer}
-          setNewPlayer={setNewPlayer}
           onAddPlayer={addPlayer}
           onToggleElim={toggleElim}
           onDeletePlayer={deletePlayer}

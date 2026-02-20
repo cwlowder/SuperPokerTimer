@@ -79,8 +79,9 @@
 
   "players": {
     "title": "Players",
-    "addPlayer": "Add Player",
-    "removePlayer": "Remove Player",
+    "addPlayer": "Add Player(s)",
+    "addHint": "Add one or more players to the tournament",
+    "addModalHint": "Enter one or more player names. You can separate names with commas or press Enter to add them.",
     "search": "Search Players",
     "searchPlaceholder": "Enter player name...",
     "searchHint": "Search by name to quickly find a player",
@@ -90,6 +91,8 @@
     "active_status": "Active",
     "eliminated_status": "Eliminated",
     "noPlayers": "No players added",
+    "pendingTitle": "Players to Add",
+    "pendingEmpty": "No players added yet",
     "columns": {
       "name": "Name",
       "status": "Status",
@@ -97,8 +100,10 @@
     },
     "actions": {
       "eliminate": "Eliminate",
-      "delete": "delete",
-      "undo": "Undo"
+      "delete": "Delete",
+      "undo": "Undo",
+      "addToList": "Add to List",
+      "remove": "Remove"
     }
   },
 
@@ -183,6 +188,7 @@
     "close": "Close",
     "save": "Save",
     "loading": "Loading…",
+    "saving": "Saving…",
     "error": "An error occurred",
     "success": "Success",
     "enabled": "enabled",
