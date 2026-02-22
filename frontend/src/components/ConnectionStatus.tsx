@@ -4,9 +4,14 @@ import {
   ClockCheck,
   ClockFading,
   WifiOff,
-  Wifi
+  Wifi,
+  Volume1,
+  Volume2,
+  VolumeOff,
 } from "lucide-react";
 import { useEventStream } from "../hooks/useEventStream";
+import { halfVolume, fullVolume } from "../hooks/useLocalSettings";
+import { useLocalSettingsCtx } from "../context/LocalSettingsContext";
 
 export default function ConnectionStatus({
   size = 16,
@@ -16,6 +21,7 @@ export default function ConnectionStatus({
   muted?: boolean;
 }) {
   const { connected, timerStatus } = useEventStream();
+  const { settings, cycleVolume } = useLocalSettingsCtx();
 
   // ---- WebSocket status ----
   const wsIcon = connected ? (
@@ -53,9 +59,24 @@ export default function ConnectionStatus({
     timerLabel = "Out of Sync";
   }
 
+  let soundIcon = <VolumeOff size={size} />;
+  let soundColor = "#ef4444";
+  let soundLabel = "Sound off";
+
+  if (settings.volume === halfVolume) {
+    soundIcon = <Volume1 size={size} />;
+    soundColor = "#9ca3af";
+    soundLabel = "50%";
+  } else if (settings.volume === fullVolume) {
+    soundIcon = <Volume2 size={size} />;
+    soundColor = "#9ca3af";
+    soundLabel = "100%";
+  }
+
   // If muted, remove all color
   const wsFinalColor = muted ? "inherit" : wsColor;
   const timerFinalColor = muted ? "inherit" : timerColor;
+  const soundFinalColor = muted ? "inherit" : soundColor;
 
   return (
     <div
@@ -92,6 +113,18 @@ export default function ConnectionStatus({
         title={timerLabel}
       >
         {timerIcon}
+      </div>
+      <div
+        onClick={cycleVolume}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          color: soundFinalColor
+        }}
+        title={soundLabel}
+      >
+        {soundIcon}
       </div>
     </div>
   );
