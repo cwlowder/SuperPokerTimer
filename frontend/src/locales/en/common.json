@@ -166,6 +166,13 @@
     "end": "Play when the tournament ends (no more levels)"
   },
 
+  "seating": {
+    "sectionTitle": "Seating",
+    "helpText": "Prefer fewer tables so each used table has at least this many players (when possible).",
+    "minPlayersPerTable": "Minimum players per table",
+    "save": "Save seating"
+  },
+
   "announcements": {
     "title": "Announcements",
     "latest": "Latest",

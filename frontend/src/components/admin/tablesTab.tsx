@@ -404,7 +404,7 @@ export function TablesTab({
                           <div className="muted" style={{ fontSize: 12 }}>
                             {t("tables.seatNumber", { num: s.seat_num })}
                           </div>
-                          <div style={{ fontWeight: 800, opacity: p?.eliminated ? 0.6 : 1 }}>
+                          <div className={p?.eliminated ? "crossed-out" : undefined} style={{ fontWeight: 800, opacity: p?.eliminated ? 0.6 : 1 }}>
                             {p ? p.name : <span className="muted">—</span>}
                           </div>
                         </div>

@@ -19,11 +19,12 @@ docker compose up --build
 ```
 
 Open:
+
 - Admin UI: http://localhost:5173
-- Big picture mode: http://localhost:5173/display
+- Display mode: http://localhost:5173/display
 - Backend API: http://localhost:8000/docs
 
-> On your phone, replace `localhost` with the IP of the machine running Docker (e.g. `http://192.168.1.50:5173`).
+On your phone, replace `localhost` with the IP of the machine running Docker (for example `http://192.168.1.50:5173`).
 
 ## Persistence
 
@@ -32,7 +33,7 @@ Open:
 
 ## Adding sounds
 
-Put audio files into `./sounds` (mp3/wav/ogg/m4a). They appear in **Sounds** dropdowns.
+Put audio files into `./sounds` (mp3/wav/ogg/m4a). They appear in the Sounds dropdowns.
 The backend serves them at `/sounds/<filename>`.
 
 ## Announcements
@@ -40,13 +41,17 @@ The backend serves them at `/sounds/<filename>`.
 Seating operations (randomize, rebalance, deseat) and timer events (level changes/resets, schedule complete) create announcements.
 Display mode shows announcements prominently.
 
+## Seating settings
+
+Minimum players per table (default 4): randomize/rebalance will reduce the number of tables when possible to keep at least this many players per used table.
+
 ## Local development (no Docker)
 
 Backend (FastAPI):
 
 ```bash
 cd backend
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -60,6 +65,20 @@ npm install
 VITE_BACKEND_URL=http://localhost:8000 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
+## Running tests
+
+Backend unit tests (pytest):
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt -r requirements-test.txt
+pytest
+```
+
+CI runs the same suite via GitHub Actions: `.github/workflows/tests.yaml`.
+
 ## Configuration
 
 Backend environment variables:
@@ -72,6 +91,10 @@ Frontend environment variables:
 
 - `VITE_BACKEND_URL` (default `http://backend:8000`)
 - `VITE_ALLOWED_HOSTS` (default `all`)
+
+Settings JSON:
+
+- `settings.seating.min_players_per_table` (default `4`)
 
 ## Notes
 

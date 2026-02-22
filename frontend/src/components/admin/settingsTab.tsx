@@ -6,6 +6,69 @@ import { useTranslation } from "react-i18next";
 import { noVolume, halfVolume, fullVolume } from "../../hooks/useLocalSettings";
 import { useLocalSettingsCtx } from "../../context/LocalSettingsContext";
 
+export function SeatingCard({
+  settings,
+  onSave
+}: {
+  settings: Settings | null;
+  onSave: (minPlayersPerTable: number) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const cur = (settings as any)?.seating?.min_players_per_table ?? 4;
+  const [draft, setDraft] = useState<number>(cur);
+  const dirty = draft !== cur;
+
+  React.useEffect(() => {
+    setDraft(cur);
+  }, [cur]);
+
+  return (
+    <div className="card">
+      <h3>{t("seating.sectionTitle")}</h3>
+      <div className="muted">{t("seating.helpText")}</div>
+      <hr />
+
+      {settings ? (
+        <div style={{ display: "grid", gap: 10 }}>
+          <div className="grid2">
+            <div>
+              <label>{t("seating.minPlayersPerTable")}</label>
+              <input
+                className="input"
+                type="number"
+                min={1}
+                step={1}
+                value={draft}
+                onChange={(e) => setDraft(Number(e.target.value))}
+              />
+            </div>
+            <div style={{ display: "flex", alignItems: "end", gap: 8 }}>
+              <button
+                className="btn primary"
+                disabled={!dirty}
+                onClick={async () => {
+                  await onSave(draft);
+                }}
+              >
+                {t("seating.save")}
+              </button>
+              <button
+                className="btn"
+                disabled={!dirty}
+                onClick={() => setDraft(cur)}
+              >
+                {t("levels.actions.discard")}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="muted">{t("common.loading")}</div>
+      )}
+    </div>
+  );
+}
+
 export function SoundsCard({
   settings,
   sounds,
@@ -280,7 +343,7 @@ export function LevelsCard({
                       className="input"
                       style={{ fontSize: 20 }}
                       value={l.type}
-                      onChange={(e) => updateLevel(idx, { type: e.target.value })}
+                      onChange={(e) => updateLevel(idx, { type: e.target.value as Level["type"] })}
                     >
                       <option value="regular">{t("levels.regular")}</option>
                       <option value="break">{t("levels.break")}</option>
@@ -374,7 +437,8 @@ export function SettingsTab({
   setLevelsDirty,
   onSetSound,
   onPreviewSound,
-  onSaveLevels
+  onSaveLevels,
+  onSaveSeating
 }: {
   settings: Settings | null;
   sounds: string[];
@@ -385,10 +449,12 @@ export function SettingsTab({
   onSetSound: (cue: "transition" | "half" | "thirty" | "five" | "end", file: string | null) => Promise<void>;
   onPreviewSound: (file: string) => void;
   onSaveLevels: () => Promise<void>;
+  onSaveSeating: (minPlayersPerTable: number) => Promise<void>;
 }) {
   return (
     <div className="row" style={{ marginTop: 12, display: "grid", gap: 12 }}>
       <SoundsCard settings={settings} sounds={sounds} onSetSound={onSetSound} onPreview={onPreviewSound} />
+      <SeatingCard settings={settings} onSave={onSaveSeating} />
       <LevelsCard
         settings={settings}
         levelsDraft={levelsDraft}

@@ -132,6 +132,14 @@ export default function AdminPage() {
     await reload();
   };
 
+  const saveSeating = async (minPlayersPerTable: number) => {
+    if (!settings) return;
+    const v = Math.max(1, Math.floor(Number(minPlayersPerTable) || 0));
+    const next: any = { ...settings, seating: { ...(settings as any).seating, min_players_per_table: v } };
+    await apiPut("/api/settings", next);
+    await reload();
+  };
+
   const soundToPlayNow = lastSound ?? soundPreview;
 
   return (
@@ -201,6 +209,7 @@ export default function AdminPage() {
           onSetSound={setSound}
           onPreviewSound={(file) => setSoundPreview({ file, playId: Date.now() })}
           onSaveLevels={saveLevels}
+          onSaveSeating={saveSeating}
         />
       ) : null}
     </div>
