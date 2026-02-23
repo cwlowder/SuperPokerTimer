@@ -33,7 +33,7 @@
     "running": "Running",
     "paused": "Paused",
     "breakText": "Take a Break!",
-    "adminUrlText": "Phone admin URL:"
+    "adminUrlText": "Phone admin URL"
   },
 
   "controls": {
