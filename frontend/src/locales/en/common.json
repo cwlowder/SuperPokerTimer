@@ -143,6 +143,10 @@
 
   "sound": {
     "sectionTitle": "Sound Settings",
+    "volumeText": "Configure sound volume",
+    "volumeOff": "0%",
+    "volumeLow": "50%",
+    "volumeFull": "100%",
     "helpText": "Configure which sounds play during the tournament",
     "preview": "Preview",
     "none": "No Sound",

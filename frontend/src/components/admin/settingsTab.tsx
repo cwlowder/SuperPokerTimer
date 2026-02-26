@@ -3,6 +3,8 @@ import MoneyDisplay from "../MoneyDisplay";
 import { GripVertical } from "lucide-react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { noVolume, halfVolume, fullVolume } from "../../hooks/useLocalSettings";
+import { useLocalSettingsCtx } from "../../context/LocalSettingsContext";
 
 export function SoundsCard({
   settings,
@@ -16,10 +18,38 @@ export function SoundsCard({
   onPreview: (file: string) => void;
 }) {
   const { t } = useTranslation();
+  const { settings: localSettings, setSettings } = useLocalSettingsCtx();
+
+  const volumeValue =
+    localSettings.volume === noVolume ? "off" : localSettings.volume === halfVolume ? "low" : "full";
 
   return (
     <div className="card">
       <h3>{t("sound.sectionTitle")}</h3>
+      <div className="muted">{t("sound.volumeText")}</div>
+      <hr/>
+      <div style={{ display: "grid", gap: 6, marginBottom: 10 }}>
+        {/* 3-position "slider" using a range input */}
+        <input
+          type="range"
+          min={0}
+          max={2}
+          step={1}
+          value={volumeValue === "off" ? 0 : volumeValue === "low" ? 1 : 2}
+          onChange={(e) => {
+            const idx = Number(e.target.value);
+            const v = idx === 0 ? noVolume : idx === 1 ? halfVolume : fullVolume;
+            setSettings((prev) => ({ ...prev, volume: v }));
+          }}
+        />
+
+        <div className="muted" style={{ display: "flex", justifyContent: "space-between" }}>
+          <span>{t("sound.volumeOff")}</span>
+          <span>{t("sound.volumeLow")}</span>
+          <span>{t("sound.volumeFull")}</span>
+        </div>
+      </div>
+      <br/>
       <div className="muted">{t("sound.helpText")}</div>
       <hr />
       {settings ? (
