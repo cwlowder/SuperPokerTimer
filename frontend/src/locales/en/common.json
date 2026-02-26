@@ -114,8 +114,14 @@
     "seatsCount_one": "{{count}} seat",
     "seatsCount_other": "{{count}} seats",
     "seatNumber": "seat {{num}}",
+  
+    "pendingTitle": "Pending Tables",
+    "pendingEmpty": "No tables queued yet.",
+
     "actions": {
-      "add": "Add Table",
+      "add": "Add Table(s)",
+      "addToList": "Add to List",
+      "remove": "Remove",
       "enable": "Enable",
       "disable": "Disable",
       "delete": "Delete Table",
@@ -126,7 +132,10 @@
     "name": "Table Name",
     "rename": "Rename",
     "dragMoveHint": "Drag to reorder tables",
+    "dropHint": "Drop a player here",
     "noTables": "No tables configured",
+    "addHint": "Create and manage tables",
+    "addModalHint": "Enter one or more table names (comma separated). Choose the same seat count for each.",
     "seating": "Seats"
   },
 

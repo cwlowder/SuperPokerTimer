@@ -18,8 +18,6 @@ export default function AdminPage() {
   const { settings, state, remainingMs, lastSound, announcements: liveAnnouncements, connected, timerStatus } = useEventStream();
 
   const [search, setSearch] = useState("");
-  const [newTableName, setNewTableName] = useState("Table 1");
-  const [newTableSeats, setNewTableSeats] = useState(9);
   const [soundPreview, setSoundPreview] = useState<{ file: string | null; playId: number } | null>(null);
   const [levelsDraft, setLevelsDraft] = useState<Level[]>([]);
   const [levelsDirty, setLevelsDirty] = useState(false);
@@ -74,10 +72,10 @@ export default function AdminPage() {
   };
 
   // ---- Tables ----
-  const addTable = async () => {
-    const name = newTableName.trim();
+  const addTable = async (tableName: string, seats: number) => {
+    const name = tableName.trim();
     if (!name) return;
-    await apiPost("/api/tables", { name, seats: newTableSeats });
+    await apiPost("/api/tables", { name, seats });
     await reload();
   };
   const updateTable = async (t: Table, patch: Partial<Table>) => {
@@ -181,10 +179,6 @@ export default function AdminPage() {
           tables={tables}
           seatsByTable={seatsByTable}
           playersById={playersById}
-          newTableName={newTableName}
-          setNewTableName={setNewTableName}
-          newTableSeats={newTableSeats}
-          setNewTableSeats={setNewTableSeats}
           onAddTable={addTable}
           onUpdateTable={updateTable}
           onDeleteTable={deleteTable}

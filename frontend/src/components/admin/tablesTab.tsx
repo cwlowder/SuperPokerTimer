@@ -1,16 +1,236 @@
-import { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { GripVertical } from "lucide-react";
 import { Player, Seat, Table } from "../../types";
 import { useTranslation } from "react-i18next";
+
+function AddTablesModal({
+  open,
+  tables,
+  onAddTable,
+  onClose
+}: {
+  open: boolean;
+  tables: Table[];
+  onAddTable: (name: string, seats: number) => Promise<void>;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+
+  const [nameInput, setNameInput] = useState("");
+  const [seatsInput, setSeatsInput] = useState<number>(9);
+  const [pending, setPending] = useState<Array<{ name: string; seats: number }>>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const existingNames = useMemo(() => {
+    return new Set(tables.map((tb) => tb.name.trim().toLowerCase()).filter(Boolean));
+  }, [tables]);
+
+  function normalizeName(s: string) {
+    return s.trim().replace(/\s+/g, " ");
+  }
+
+  function clampSeats(n: number) {
+    if (!Number.isFinite(n)) return 9;
+    return Math.max(2, Math.min(12, Math.floor(n)));
+  }
+
+  function addOne(nameRaw: string, seatsRaw: number) {
+    const name = normalizeName(nameRaw);
+    if (!name) return;
+
+    const key = name.toLowerCase();
+    if (existingNames.has(key)) return;
+    if (pending.some((p) => p.name.toLowerCase() === key)) return;
+
+    setPending((prev) => [...prev, { name, seats: clampSeats(seatsRaw) }]);
+  }
+
+  function addFromInput() {
+    const parts = (nameInput || "")
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    if (parts.length === 0) return;
+
+    parts.forEach((nm) => addOne(nm, seatsInput));
+    setNameInput("");
+  }
+
+  function removePending(idx: number) {
+    setPending((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function resetAndClose() {
+    setNameInput("");
+    setSeatsInput(9);
+    setPending([]);
+    setSubmitting(false);
+    onClose();
+  }
+
+  async function confirmAddAll() {
+    if (pending.length === 0) return;
+
+    setSubmitting(true);
+    try {
+      for (const item of pending) {
+        await onAddTable(item.name, item.seats);
+      }
+      resetAndClose();
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) resetAndClose();
+      }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.45)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+        zIndex: 9999
+      }}
+    >
+      <div
+        className="modal-card"
+        style={{
+          width: "min(720px, 100%)",
+          maxHeight: "min(80vh, 800px)",
+          overflow: "auto"
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <h3 style={{ margin: 0 }}>{t("tables.addTable")}</h3>
+          <button className="btn" onClick={resetAndClose} disabled={submitting}>
+            {t("common.close")}
+          </button>
+        </div>
+
+        <div className="muted" style={{ marginTop: 6 }}>{t("tables.addModalHint")}</div>
+
+        <div className="grid2" style={{ alignItems: "end", marginTop: 12 }}>
+          <div>
+            <label>{t("tables.name")}</label>
+            <input
+              className="input"
+              value={nameInput}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val.includes(",")) {
+                  const pieces = val.split(",");
+                  const last = pieces.pop() ?? "";
+                  pieces
+                    .map((p) => p.trim())
+                    .filter(Boolean)
+                    .forEach((nm) => addOne(nm, seatsInput));
+                  setNameInput(last);
+                } else {
+                  setNameInput(val);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addFromInput();
+                }
+              }}
+              placeholder={t("tables.name")}
+              disabled={submitting}
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label>{t("tables.seats")}</label>
+            <input
+              className="input"
+              type="number"
+              value={seatsInput}
+              onChange={(e) => setSeatsInput(clampSeats(Number(e.target.value)))}
+              min={2}
+              max={12}
+              disabled={submitting}
+            />
+          </div>
+        </div>
+
+        <div style={{ marginTop: 10 }}>
+          <button className="btn" onClick={addFromInput} disabled={submitting || !nameInput.trim()}>
+            {t("tables.actions.addToList")}
+          </button>
+        </div>
+
+        <hr />
+
+        <div>
+          <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <h4 style={{ margin: 0 }}>{t("tables.pendingTitle")}</h4>
+            <span className="badge">{pending.length}</span>
+          </div>
+
+          {pending.length === 0 ? (
+            <div className="muted" style={{ marginTop: 8 }}>
+              {t("tables.pendingEmpty")}
+            </div>
+          ) : (
+            <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+              {pending.map((item, idx) => (
+                <div
+                  key={`${item.name}-${idx}`}
+                  className="row"
+                  style={{ justifyContent: "space-between", alignItems: "center" }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 800 }}>{item.name}</div>
+                    <div className="muted" style={{ fontSize: 12 }}>
+                      {t("tables.seatsCount", { count: item.seats })}
+                    </div>
+                  </div>
+                  <button className="btn danger" onClick={() => removePending(idx)} disabled={submitting}>
+                    {t("tables.actions.remove")}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <hr />
+
+        <div className="row" style={{ justifyContent: "flex-end", gap: 10 }}>
+          <button className="btn" onClick={resetAndClose} disabled={submitting}>
+            {t("common.cancel")}
+          </button>
+          <button
+            className={"btn primary" + (submitting ? " disabled" : "")}
+            onClick={confirmAddAll}
+            disabled={submitting || pending.length === 0}
+          >
+            {submitting ? t("common.saving") : t("common.confirm")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function TablesTab({
   tables,
   seatsByTable,
   playersById,
-  newTableName,
-  setNewTableName,
-  newTableSeats,
-  setNewTableSeats,
   onAddTable,
   onUpdateTable,
   onDeleteTable,
@@ -23,11 +243,7 @@ export function TablesTab({
   tables: Table[];
   seatsByTable: Record<string, Seat[]>;
   playersById: Record<string, Player>;
-  newTableName: string;
-  setNewTableName: (s: string) => void;
-  newTableSeats: number;
-  setNewTableSeats: (n: number) => void;
-  onAddTable: () => Promise<void>;
+  onAddTable: (name: string, seats: number) => Promise<void>;
   onUpdateTable: (t: Table, patch: Partial<Table>) => Promise<void>;
   onDeleteTable: (t: Table) => Promise<void>;
   onToggleEnabled: (t: Table) => Promise<void>;
@@ -38,6 +254,8 @@ export function TablesTab({
 }) {
   const { t } = useTranslation();
 
+  const [addOpen, setAddOpen] = useState(false);
+
   const [dragPid, setDragPid] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null); // `${tableId}:${seatNum}`
 
@@ -45,33 +263,21 @@ export function TablesTab({
     <div className="card" style={{ marginTop: 12 }}>
       <h3>{t("tables.title")}</h3>
 
-      <div className="grid2" style={{ alignItems: "end" }}>
-        <div>
-          <label>{t("tables.newTableName")}</label>
-          <input
-            className="input"
-            value={newTableName}
-            onChange={(e) => setNewTableName(e.target.value)}
-            placeholder={t("tables.name")}
-          />
-        </div>
-        <div>
-          <label>{t("tables.seats")}</label>
-          <input
-            className="input"
-            type="number"
-            value={newTableSeats}
-            onChange={(e) => setNewTableSeats(Number(e.target.value))}
-            min={2}
-            max={12}
-          />
-        </div>
-      </div>
-
-      <div style={{ marginTop: 10 }} className="row">
-        <button className="btn primary" onClick={onAddTable}>
+      <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+        <div className="muted">{t("tables.addHint")}</div>
+        <button className="btn primary" onClick={() => setAddOpen(true)}>
           {t("tables.actions.add")}
         </button>
+      </div>
+
+      <AddTablesModal
+        open={addOpen}
+        tables={tables}
+        onAddTable={onAddTable}
+        onClose={() => setAddOpen(false)}
+      />
+
+      <div style={{ marginTop: 10 }} className="row">
         <button className="btn" onClick={onRandomize}>
           {t("tables.actions.randomize")}
         </button>
