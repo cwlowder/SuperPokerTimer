@@ -169,9 +169,11 @@ async def rebalance(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]
 
     # Build current seating by table (active only)
     seated_by_table: dict[str, list[str]] = {t["id"]: [] for t in tables_sorted}
+    seated_on_enabled: set[str] = set()
     for pid, (tid, _seat) in prev_map.items():
         if pid in players_by_id and tid in seated_by_table:
             seated_by_table[tid].append(pid)
+            seated_on_enabled.add(pid)
 
     # Consolidate to the minimum number of tables needed, preferring tables that already have players.
     used_table_ids = select_tables_for_rebalance(
@@ -201,8 +203,9 @@ async def rebalance(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]
         stay[tid] = current_sorted[:want]
         movers.extend(current_sorted[want:])
 
-    # Unseated active players become movers too
-    currently_seated = set(prev_map.keys())
+    # Anyone not seated at an enabled table becomes a mover too.
+    # This includes players that were seated at a now-disabled table.
+    currently_seated = seated_on_enabled
     for pid in active_ids:
         if pid not in currently_seated:
             movers.append(pid)

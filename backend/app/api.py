@@ -315,6 +315,32 @@ async def move_seat(request: Request, payload: dict[str, Any]):
         "swapped_player_id": dest_player_id,
     }
 
+
+@router.post("/seating/unseat")
+async def unseat_player(request: Request, payload: dict[str, Any]):
+    """Remove a single player from their current seat."""
+    conn: aiosqlite.Connection = request.app.state.db
+
+    player_id = payload.get("player_id")
+    if not player_id:
+        raise HTTPException(400, "player_id required")
+
+    cur = await conn.execute(
+        "SELECT table_id, seat_num FROM seat_assignments WHERE player_id=?",
+        (player_id,),
+    )
+    row = await cur.fetchone()
+    if row is None:
+        return {"ok": True, "mode": "noop", "from": {"table_id": None, "seat_num": None}}
+
+    table_id, seat_num = row[0], row[1]
+    await conn.execute(
+        "UPDATE seat_assignments SET player_id=NULL WHERE table_id=? AND seat_num=?",
+        (table_id, seat_num),
+    )
+    await conn.commit()
+    return {"ok": True, "mode": "unseat", "from": {"table_id": table_id, "seat_num": seat_num}}
+
 @router.get("/announcements")
 async def announcements(request: Request, limit: int = 50):
     conn: aiosqlite.Connection = request.app.state.db

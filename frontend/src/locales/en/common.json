@@ -137,7 +137,11 @@
     "noTables": "No tables configured",
     "addHint": "Create and manage tables",
     "addModalHint": "Enter one or more table names (comma separated). Choose the same seat count for each.",
-    "seating": "Seats"
+    "seating": "Seats",
+    "unseatedTitle": "Unseated",
+    "unseatedSearchPlaceholder": "Search unseated players...",
+    "unseatedEmpty": "No unseated players",
+    "unseatedDropHint": "Drop a seated player here to unseat them"
   },
 
   "settings": {

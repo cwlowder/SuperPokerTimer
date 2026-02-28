@@ -22,6 +22,7 @@ export default function AdminPage() {
   const [soundPreview, setSoundPreview] = useState<{ file: string | null; playId: number } | null>(null);
   const [levelsDraft, setLevelsDraft] = useState<Level[]>([]);
   const [levelsDirty, setLevelsDirty] = useState(false);
+  const [seatFlash, setSeatFlash] = useState<{ nonce: number; keys: string[] }>({ nonce: 0, keys: [] });
 
   useEffect(() => {
     if (!settings) return;
@@ -93,19 +94,34 @@ export default function AdminPage() {
     await reload();
   };
   const doRandomize = async () => {
-    await apiPost("/api/seating/randomize");
+    const res: any = await apiPost("/api/seating/randomize");
+    const keys = (res?.changes ?? []).map((c: any) => `${c.to_table}:${c.to_seat}`).filter(Boolean);
+    if (keys.length) setSeatFlash({ nonce: Date.now(), keys });
     await reload();
   };
   const doRebalance = async () => {
-    await apiPost("/api/seating/rebalance");
+    const res: any = await apiPost("/api/seating/rebalance");
+    const keys = (res?.changes ?? []).map((c: any) => `${c.to_table}:${c.to_seat}`).filter(Boolean);
+    if (keys.length) setSeatFlash({ nonce: Date.now(), keys });
     await reload();
   };
   const doDeseat = async () => {
     await apiPost("/api/seating/deseat");
     await reload();
   };
-  const moveSeat = async (playerId: string, toTableId: string, toSeatNum: number) => {
-    await apiPost("/api/seating/move", { player_id: playerId, to_table_id: toTableId, to_seat_num: toSeatNum, mode: "swap" });
+
+  const unseatPlayer = async (playerId: string) => {
+    const res: any = await apiPost("/api/seating/unseat", { player_id: playerId });
+    const k = res?.from?.table_id && res?.from?.seat_num ? `${res.from.table_id}:${res.from.seat_num}` : null;
+    if (k) setSeatFlash({ nonce: Date.now(), keys: [k] });
+    await reload();
+  };
+  const moveSeat = async (playerId: string, toTableId: string, toSeatNum: number, mode: "swap" | "move") => {
+    const res: any = await apiPost("/api/seating/move", { player_id: playerId, to_table_id: toTableId, to_seat_num: toSeatNum, mode });
+    const k1 = res?.to?.table_id && res?.to?.seat_num ? `${res.to.table_id}:${res.to.seat_num}` : null;
+    const k2 = res?.from?.table_id && res?.from?.seat_num ? `${res.from.table_id}:${res.from.seat_num}` : null;
+    const keys = [k1, k2].filter(Boolean) as string[];
+    if (keys.length) setSeatFlash({ nonce: Date.now(), keys });
     await reload();
   };
 
@@ -198,6 +214,7 @@ export default function AdminPage() {
         <TablesTab
           tables={tables}
           seatsByTable={seatsByTable}
+          players={players}
           playersById={playersById}
           onAddTable={addTable}
           onUpdateTable={updateTable}
@@ -207,6 +224,8 @@ export default function AdminPage() {
           onRebalance={doRebalance}
           onDeseat={doDeseat}
           onMoveSeat={moveSeat}
+          onUnseatPlayer={unseatPlayer}
+          seatFlash={seatFlash}
         />
       ) : null}
 
