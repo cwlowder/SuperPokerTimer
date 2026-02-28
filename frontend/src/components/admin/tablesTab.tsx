@@ -340,78 +340,151 @@ export function TablesTab({
               <div className="muted" style={{ marginBottom: 6 }}>
                 {t("tables.seating")}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8 }}>
-                {(seatsByTable[tbl.id] ?? []).map((s) => {
-                  const p = s.player_id ? playersById[s.player_id] : null;
-                  const key = `${s.table_id}:${s.seat_num}`;
-                  const isOver = dragOver === key;
-                  const isDragging = dragPid === (p?.id ?? "");
+              {/*
+                Seat layout: 6x2 grid.
+                Fill from upper-left left-to-right, but keep numbering clockwise:
+                  seats=6  => 1,2,3,_,_,_ / 6,5,4,_,_,_
+                  seats=12 => 1..6 / 12..7
+              */}
+              <div style={{ overflowX: "auto" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(6, minmax(160px, 1fr))",
+                    gap: 8,
+                    minWidth: 6 * 160 + 5 * 8
+                  }}
+                >
+                  {(() => {
+                    const seatList = seatsByTable[tbl.id] ?? [];
+                    const byNum = new Map<number, Seat>();
+                    for (const s of seatList) byNum.set(s.seat_num, s);
 
-                  return (
-                    <div
-                      key={key}
-                      draggable={!!p}
-                      onDragStart={(e) => {
-                        if (!p) return;
-                        setDragPid(p.id);
-                        e.dataTransfer.setData("text/player-id", p.id);
-                        e.dataTransfer.effectAllowed = "move";
-                      }}
-                      onDragEnd={() => {
-                        setDragPid(null);
-                        setDragOver(null);
-                      }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setDragOver(key);
-                      }}
-                      onDragLeave={() => setDragOver((cur) => (cur === key ? null : cur))}
-                      onDrop={async (e) => {
-                        e.preventDefault();
-                        const playerId = e.dataTransfer.getData("text/player-id") || dragPid;
-                        setDragOver(null);
-                        setDragPid(null);
-                        if (!playerId) return;
-                        await onMoveSeat(playerId, s.table_id, s.seat_num);
-                      }}
-                      style={{
-                        padding: 10,
-                        borderRadius: 10,
-                        border: "1px solid rgba(255,255,255,0.10)",
-                        outline: isOver ? "2px solid rgba(120,200,255,0.6)" : "none",
-                        background: isOver ? "rgba(120,200,255,0.08)" : "transparent",
-                        opacity: isDragging ? 0.55 : 1,
-                        cursor: p ? "grab" : "default",
-                        userSelect: "none",
-                        transition: "background 120ms ease, outline 120ms ease, opacity 120ms ease"
-                      }}
-                      title={p ? t("tables.dragMoveHint") : t("tables.dropHint")}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {p ? (
-                          <GripVertical
-                            size={14}
-                            style={{
-                              opacity: 0.35,
-                              flex: "0 0 auto"
-                            }}
-                          />
-                        ) : (
-                          <div style={{ width: 14, flex: "0 0 auto" }} />
-                        )}
+                    const tiles: Array<{ key: string; seat: Seat | null; enabled: boolean }> = [];
 
-                        <div style={{ minWidth: 0 }}>
-                          <div className="muted" style={{ fontSize: 12 }}>
-                            {t("tables.seatNumber", { num: s.seat_num })}
-                          </div>
-                          <div style={{ fontWeight: 800, opacity: p?.eliminated ? 0.6 : 1 }}>
-                            {p ? p.name : <span className="muted">—</span>}
+                    const total = Math.max(0, Math.min(12, Math.floor(Number(tbl.seats) || 0)));
+                    const colsUsed = Math.max(1, Math.min(6, Math.ceil(total / 2)));
+                    const bottomMax = Math.min(total, colsUsed * 2);
+
+                    // Row 1: seats 1..colsUsed (left to right)
+                    for (let col = 0; col < 6; col++) {
+                      const seatNum = col + 1;
+                      const enabled = col < colsUsed && seatNum <= total;
+                      const s = enabled ? byNum.get(seatNum) : undefined;
+                      tiles.push({
+                        key: enabled ? `${tbl.id}:${seatNum}` : `${tbl.id}:disabled:top:${col}`,
+                        seat: enabled
+                          ? {
+                              table_id: tbl.id,
+                              table_name: tbl.name,
+                              seat_num: seatNum,
+                              player_id: s?.player_id ?? null
+                            }
+                          : null,
+                        enabled
+                      });
+                    }
+
+                    // Row 2: seats bottomMax..(colsUsed+1) (left to right)
+                    for (let col = 0; col < 6; col++) {
+                      const seatNum = bottomMax - col;
+                      const enabled = col < colsUsed && seatNum > colsUsed && seatNum <= total;
+                      const s = enabled ? byNum.get(seatNum) : undefined;
+                      tiles.push({
+                        key: enabled ? `${tbl.id}:${seatNum}` : `${tbl.id}:disabled:bottom:${col}`,
+                        seat: enabled
+                          ? {
+                              table_id: tbl.id,
+                              table_name: tbl.name,
+                              seat_num: seatNum,
+                              player_id: s?.player_id ?? null
+                            }
+                          : null,
+                        enabled
+                      });
+                    }
+
+                    return tiles.map(({ key, seat, enabled }) => {
+                      const p = enabled && seat?.player_id ? playersById[seat.player_id] : null;
+                      const isOver = enabled && dragOver === key;
+                      const isDragging = dragPid === (p?.id ?? "");
+
+                      return (
+                        <div
+                          key={key}
+                          draggable={!!p}
+                          onDragStart={(e) => {
+                            if (!p) return;
+                            setDragPid(p.id);
+                            e.dataTransfer.setData("text/player-id", p.id);
+                            e.dataTransfer.effectAllowed = "move";
+                          }}
+                          onDragEnd={() => {
+                            setDragPid(null);
+                            setDragOver(null);
+                          }}
+                          onDragOver={(e) => {
+                            if (!enabled) return;
+                            e.preventDefault();
+                            setDragOver(key);
+                          }}
+                          onDragLeave={() => setDragOver((cur) => (cur === key ? null : cur))}
+                          onDrop={async (e) => {
+                            if (!enabled) return;
+                            e.preventDefault();
+                            const playerId = e.dataTransfer.getData("text/player-id") || dragPid;
+                            setDragOver(null);
+                            setDragPid(null);
+                            if (!playerId) return;
+                            if (!seat) return;
+                            await onMoveSeat(playerId, seat.table_id, seat.seat_num);
+                          }}
+                          style={{
+                            padding: 10,
+                            borderRadius: 10,
+                            border: "1px solid rgba(255,255,255,0.10)",
+                            outline: isOver ? "2px solid rgba(120,200,255,0.6)" : "none",
+                            background: isOver ? "rgba(120,200,255,0.08)" : "transparent",
+                            opacity: !enabled ? 0.25 : isDragging ? 0.55 : 1,
+                            cursor: p ? "grab" : enabled ? "default" : "not-allowed",
+                            userSelect: "none",
+                            transition: "background 120ms ease, outline 120ms ease, opacity 120ms ease"
+                          }}
+                          title={!enabled ? "" : p ? t("tables.dragMoveHint") : t("tables.dropHint")}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            {p ? (
+                              <GripVertical
+                                size={14}
+                                style={{
+                                  opacity: 0.35,
+                                  flex: "0 0 auto"
+                                }}
+                              />
+                            ) : (
+                              <div style={{ width: 14, flex: "0 0 auto" }} />
+                            )}
+
+                            <div style={{ minWidth: 0 }}>
+                              <div className="muted" style={{ fontSize: 12 }}>
+                                {enabled && seat ? t("tables.seatNumber", { num: seat.seat_num }) : ""}
+                              </div>
+                              <div
+                                className={p?.eliminated ? "crossed-out" : undefined}
+                                style={{
+                                  fontWeight: 800,
+                                  opacity: p?.eliminated ? 0.6 : 1
+                                }}
+                              >
+                                {enabled ? (p ? p.name : <span className="muted">—</span>) : <span className="muted"> </span>}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      );
+                    });
+                  })()}
+                </div>
               </div>
             </div>
           </div>

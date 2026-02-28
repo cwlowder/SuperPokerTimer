@@ -4,7 +4,7 @@ export const fullVolume = 1;
 export const halfVolume = 0.5;
 export const noVolume = 0;
 
-type VolumeLevel = noVolume | halfVolume | fullVolume;
+type VolumeLevel = typeof noVolume | typeof halfVolume | typeof fullVolume;
 
 export interface LocalSettings {
   volume: VolumeLevel;

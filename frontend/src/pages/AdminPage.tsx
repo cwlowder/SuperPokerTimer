@@ -11,6 +11,7 @@ import { TimerTab } from "../components/admin/timerTab";
 import { PlayersTab } from "../components/admin/playersTab";
 import { TablesTab } from "../components/admin/tablesTab";
 import { SettingsTab } from "../components/admin/settingsTab";
+import { LevelsTab } from "../components/admin/levelsTab";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("timer");
@@ -132,6 +133,14 @@ export default function AdminPage() {
     await reload();
   };
 
+  const saveSeating = async (minPlayersPerTable: number) => {
+    if (!settings) return;
+    const v = Math.max(1, Math.floor(Number(minPlayersPerTable) || 0));
+    const next: any = { ...settings, seating: { ...(settings as any).seating, min_players_per_table: v } };
+    await apiPut("/api/settings", next);
+    await reload();
+  };
+
   const soundToPlayNow = lastSound ?? soundPreview;
 
   return (
@@ -174,6 +183,17 @@ export default function AdminPage() {
         />
       ) : null}
 
+      {tab === "levels" ? (
+        <LevelsTab
+          settings={settings}
+          levelsDraft={levelsDraft}
+          levelsDirty={levelsDirty}
+          setLevelsDraft={setLevelsDraft}
+          setLevelsDirty={setLevelsDirty}
+          onSaveLevels={saveLevels}
+        />
+      ) : null}
+
       {tab === "tables" ? (
         <TablesTab
           tables={tables}
@@ -194,13 +214,9 @@ export default function AdminPage() {
         <SettingsTab
           settings={settings}
           sounds={sounds}
-          levelsDraft={levelsDraft}
-          levelsDirty={levelsDirty}
-          setLevelsDraft={setLevelsDraft}
-          setLevelsDirty={setLevelsDirty}
           onSetSound={setSound}
           onPreviewSound={(file) => setSoundPreview({ file, playId: Date.now() })}
-          onSaveLevels={saveLevels}
+          onSaveSeating={saveSeating}
         />
       ) : null}
     </div>

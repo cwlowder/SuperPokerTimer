@@ -11,11 +11,14 @@ export type Level = {
 export type Settings = {
   levels: Level[];
   sounds: {
-    start: string | null;
+    transition: string | null;
     half: string | null;
     thirty: string | null;
     five: string | null;
     end: string | null;
+  };
+  seating?: {
+    min_players_per_table?: number;
   };
 };
 
