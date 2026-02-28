@@ -7,6 +7,7 @@
     "title": "Admin Panel",
     "tabs": {
       "timer": "Timer",
+      "levels": "Levels",
       "players": "Players",
       "tables": "Tables",
       "settings": "Settings"
@@ -47,7 +48,7 @@
 
   "levels": {
     "title": "Levels",
-    "helpText": "Selecting a sound saves immediately and plays a preview.",
+    "helpText": "Configure level durations and blinds. Drag rows to reorder.",
     "regular": "Regular",
     "break": "Break",
     "smallBlind": "Small Blind",
@@ -147,7 +148,8 @@
     "levelsTitle": "Level Configuration",
     "save": "Save Settings",
     "saved": "Settings saved successfully",
-    "autoSave": "Settings are saved automatically"
+    "autoSave": "Settings are saved automatically",
+    "dragReorderLevels": "Drag to reorder levels"
   },
 
   "sound": {

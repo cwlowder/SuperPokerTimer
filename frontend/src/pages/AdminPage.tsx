@@ -11,6 +11,7 @@ import { TimerTab } from "../components/admin/timerTab";
 import { PlayersTab } from "../components/admin/playersTab";
 import { TablesTab } from "../components/admin/tablesTab";
 import { SettingsTab } from "../components/admin/settingsTab";
+import { LevelsTab } from "../components/admin/levelsTab";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("timer");
@@ -182,6 +183,17 @@ export default function AdminPage() {
         />
       ) : null}
 
+      {tab === "levels" ? (
+        <LevelsTab
+          settings={settings}
+          levelsDraft={levelsDraft}
+          levelsDirty={levelsDirty}
+          setLevelsDraft={setLevelsDraft}
+          setLevelsDirty={setLevelsDirty}
+          onSaveLevels={saveLevels}
+        />
+      ) : null}
+
       {tab === "tables" ? (
         <TablesTab
           tables={tables}
@@ -202,13 +214,8 @@ export default function AdminPage() {
         <SettingsTab
           settings={settings}
           sounds={sounds}
-          levelsDraft={levelsDraft}
-          levelsDirty={levelsDirty}
-          setLevelsDraft={setLevelsDraft}
-          setLevelsDirty={setLevelsDirty}
           onSetSound={setSound}
           onPreviewSound={(file) => setSoundPreview({ file, playId: Date.now() })}
-          onSaveLevels={saveLevels}
           onSaveSeating={saveSeating}
         />
       ) : null}
