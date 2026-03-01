@@ -199,14 +199,18 @@ export function PlayersTab({
   players,
   search,
   setSearch,
+  seatByPlayer,
   onAddPlayer,
+  onRenamePlayer,
   onToggleElim,
   onDeletePlayer
 }: {
   players: Player[];
   search: string;
   setSearch: (s: string) => void;
+  seatByPlayer: Record<string, { tableName: string; seatNum: number } | undefined>;
   onAddPlayer: (name?: string) => Promise<void>;
+  onRenamePlayer: (p: Player, name: string) => Promise<void>;
   onToggleElim: (p: Player) => Promise<void>;
   onDeletePlayer: (p: Player) => Promise<void>;
 }) {
@@ -251,24 +255,63 @@ export function PlayersTab({
           <tr>
             <th>{t("players.columns.name")}</th>
             <th>{t("players.columns.status")}</th>
+            <th>{t("players.columns.seat")}</th>
             <th style={{ width: 260 }}>{t("players.columns.actions")}</th>
           </tr>
         </thead>
         <tbody>
           {players.map((p) => (
-            <tr key={p.id}>
+            <tr
+              key={p.id}
+              style={
+                p.eliminated
+                  ? {
+                      backgroundColor: "rgba(255, 50, 50, 0.15)"
+                    }
+                  : undefined
+              }
+            >
               <td
                 style={{
                   opacity: p.eliminated ? 0.6 : 1,
                   textDecoration: p.eliminated ? "line-through" : "none"
                 }}
               >
-                {p.name}
+                <input
+                  className="input"
+                  defaultValue={p.name}
+                  disabled={p.eliminated}
+                  onBlur={(e) => onRenamePlayer(p, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                    if (e.key === "Escape") {
+                      (e.target as HTMLInputElement).value = p.name;
+                      (e.target as HTMLInputElement).blur();
+                    }
+                  }}
+                  style={{
+                    fontWeight: 800,
+                    background: "transparent",
+                    borderColor: "rgba(255,255,255,0.10)",
+                    padding: "8px 10px",
+                    maxWidth: 360
+                  }}
+                  title={p.eliminated ? "" : t("players.renameHint")}
+                />
               </td>
               <td>
                 <span className="badge">
                   {p.eliminated ? t("players.eliminated_status") : t("players.active_status")}
                 </span>
+              </td>
+              <td>
+                {seatByPlayer[p.id] ? (
+                  <span className="badge">
+                    {(seatByPlayer[p.id]?.tableName || "").trim() || t("tables.title")} {t("tables.seatNumber", { num: seatByPlayer[p.id]!.seatNum })}
+                  </span>
+                ) : (
+                  <span className="muted">—</span>
+                )}
               </td>
               <td>
                 <div className="row">
@@ -284,7 +327,7 @@ export function PlayersTab({
           ))}
           {players.length === 0 ? (
             <tr>
-              <td colSpan={3} className="muted">
+              <td colSpan={4} className="muted">
                 {t("players.noPlayers")}
               </td>
             </tr>

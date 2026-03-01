@@ -32,6 +32,21 @@ export default function AdminPage() {
   const { sounds, players, tables, announcements, playersById, tablesById, seatsByTable, error, reload, setAnnouncements } =
     useTourneyData({ playerSearch: search, auto: true });
 
+  const seatByPlayer = useMemo(() => {
+    const out: Record<string, { tableId: string; tableName: string; seatNum: number }> = {};
+    for (const seats of Object.values(seatsByTable ?? {})) {
+      for (const s of seats) {
+        if (!s.player_id) continue;
+        out[s.player_id] = {
+          tableId: s.table_id,
+          tableName: (s as any).table_name ?? tablesById?.[s.table_id]?.name ?? "",
+          seatNum: s.seat_num
+        };
+      }
+    }
+    return out;
+  }, [seatsByTable, tablesById]);
+
   const err = error;
 
   useEffect(() => {
@@ -65,6 +80,14 @@ export default function AdminPage() {
 
   const toggleElim = async (p: Player) => {
     await apiPatch(`/api/players/${p.id}`, { eliminated: !p.eliminated });
+    await reload();
+  };
+
+  const renamePlayer = async (p: Player, name: string) => {
+    const nm = (name || "").trim().replace(/\s+/g, " ");
+    if (!nm) return;
+    if (nm === p.name) return;
+    await apiPatch(`/api/players/${p.id}`, { name: nm });
     await reload();
   };
   const deletePlayer = async (p: Player) => {
@@ -193,7 +216,9 @@ export default function AdminPage() {
           players={players}
           search={search}
           setSearch={setSearch}
+          seatByPlayer={seatByPlayer}
           onAddPlayer={addPlayer}
+          onRenamePlayer={renamePlayer}
           onToggleElim={toggleElim}
           onDeletePlayer={deletePlayer}
         />

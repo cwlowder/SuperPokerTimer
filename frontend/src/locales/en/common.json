@@ -86,6 +86,7 @@
     "search": "Search Players",
     "searchPlaceholder": "Enter player name...",
     "searchHint": "Search by name to quickly find a player",
+    "renameHint": "Edit name, then click away",
     "name": "Name",
     "stack": "Stack",
     "seat": "Seat",
@@ -97,6 +98,7 @@
     "columns": {
       "name": "Name",
       "status": "Status",
+      "seat": "Table/Seat",
       "actions": "Actions"
     },
     "actions": {
