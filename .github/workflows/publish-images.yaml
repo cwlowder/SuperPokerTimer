@@ -1,8 +1,8 @@
-name: Publish Docker images
+name: Publish Docker image
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main", "master" ]
     tags: [ "v*" ]
 
 permissions:
@@ -12,15 +12,6 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: backend
-            context: ./backend
-            image: pokertourney-backend
-          - name: frontend
-            context: ./frontend
-            image: pokertourney-frontend
 
     steps:
       - name: Checkout
@@ -43,16 +34,17 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          images: ghcr.io/${{ github.repository_owner }}/pokertourney
           tags: |
-            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=tag
             type=sha
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.context }}
+          context: .
+          target: prod
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

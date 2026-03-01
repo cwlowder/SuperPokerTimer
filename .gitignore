@@ -7,3 +7,6 @@ dist/
 .DS_Store
 sounds/*
 !sounds/.keep
+
+# Environment
+.env
