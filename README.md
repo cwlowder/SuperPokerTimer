@@ -14,6 +14,8 @@ A LAN-friendly web app for running a freezeout-style poker tournament. It includ
 
 ## Quick start (Docker)
 
+Dev (hot reload for API + UI):
+
 ```bash
 docker compose up --build
 ```
@@ -24,7 +26,18 @@ Open:
 - Display mode: http://localhost:5173/display
 - Backend API: http://localhost:8000/docs
 
-On your phone, replace `localhost` with the IP of the machine running Docker (for example `http://192.168.1.50:5173`).
+Prod-like (optimized build, no code hot reload):
+
+```bash
+docker compose -f docker-compose.prod.yml up --build
+```
+
+Open:
+
+- App: http://localhost:8080
+- Backend API docs: http://localhost:8080/docs
+
+On your phone, replace `localhost` with the IP of the machine running Docker (for example `http://192.168.1.50:5173` for dev, or `http://192.168.1.50:8080` for prod).
 
 ## Persistence
 
@@ -78,6 +91,7 @@ pytest
 ```
 
 CI runs the same suite via GitHub Actions: `.github/workflows/tests.yaml`.
+Production Docker images are built/published via GitHub Actions: `.github/workflows/publish-images.yaml` (default branch publishes `latest`; tags like `v1.2.3` or `v1.2.3-rc.1` publish tagged images).
 
 ## Configuration
 
