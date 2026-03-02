@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { GripVertical } from "lucide-react";
+import { GripVertical, MoveUp, MoveDown, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import MoneyDisplay from "../MoneyDisplay";
@@ -37,8 +37,8 @@ function LevelsCard({
       {
         type,
         minutes: type === "break" ? 10 : 15,
-        small_blind_cents: 50,
-        big_blind_cents: 100,
+        small_blind_cents: type === "break" ? 0 : 50,
+        big_blind_cents: type === "break" ? 0 : 100,
         ante_cents: 0
       } as any
     ]);
@@ -58,6 +58,36 @@ function LevelsCard({
       next.splice(to, 0, item);
       return next;
     });
+  };
+
+  const shouldCancelRowDrag = (target: EventTarget | null) => {
+    if (!target || !(target instanceof HTMLElement)) return false;
+    return Boolean(
+      target.closest(
+        "button, a, input, select, textarea, [contenteditable='true'], [role='button'], [data-no-drag='true']"
+      )
+    );
+  };
+
+  const totalMinutes = levelsDraft.reduce((sum, level) => sum + Math.max(0, Number(level.minutes) || 0), 0);
+  const breakMinutes = levelsDraft.reduce(
+    (sum, level) => sum + (level.type !== "regular" ? Math.max(0, Number(level.minutes) || 0) : 0),
+    0
+  );
+
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+
+    if (hours > 0 && remainder > 0) {
+      return t("levels.summary.durationHoursMinutes", { hours, minutes: remainder });
+    }
+
+    if (hours > 0) {
+      return t("levels.summary.durationHours", { hours });
+    }
+
+    return t("levels.summary.durationMinutes", { minutes: remainder });
   };
 
   return (
@@ -115,12 +145,39 @@ function LevelsCard({
                   (dragOver?.where === "below" && dragOver.idx + 1 === dragIdx));
 
               const isBreak = l.type === "break";
+              const insertionShadow =
+                !isNoop && dragOver?.idx === idx
+                  ? dragOver.where === "above"
+                    ? "inset 0 2px 0 rgba(120,200,255,0.75)"
+                    : "inset 0 -2px 0 rgba(120,200,255,0.75)"
+                  : null;
+              const breakAccentShadow = isBreak ? "inset 4px 0 0 rgba(255, 200, 80, 0.7)" : null;
+              const rowShadow = [insertionShadow, breakAccentShadow].filter(Boolean).join(", ") || "none";
 
               return (
                 <tr
                   key={idx}
                   draggable
+                  onPointerDownCapture={(e) => {
+                    // When the row is draggable, browsers can prioritize drag gestures over
+                    // text selection inside form controls (eg double-click select in inputs).
+                    // Temporarily disable row dragging when the pointer starts on an
+                    // interactive element.
+                    if (shouldCancelRowDrag(e.target)) {
+                      e.currentTarget.draggable = false;
+                    } else {
+                      e.currentTarget.draggable = true;
+                    }
+                  }}
+                  onPointerUpCapture={(e) => {
+                    e.currentTarget.draggable = true;
+                  }}
                   onDragStart={(e) => {
+                    if (shouldCancelRowDrag(e.target)) {
+                      e.preventDefault();
+                      return;
+                    }
+
                     setDragIdx(idx);
                     e.dataTransfer.setData("text/level-idx", String(idx));
                     e.dataTransfer.effectAllowed = "move";
@@ -163,26 +220,31 @@ function LevelsCard({
                     cursor: "grab",
 
                     outline: isNoop ? "2px solid rgba(120,200,255,0.6)" : "none",
-                    background: isNoop ? "rgba(120,200,255,0.08)" : isBreak ? "rgba(255, 235, 130, 0.15)" : undefined,
+                    background: isNoop ? "rgba(120,200,255,0.08)" : isBreak ? "rgba(255, 235, 130, 0.05)" : undefined,
 
                     // insertion indicator (line between rows)
-                    boxShadow:
-                      !isNoop && dragOver?.idx === idx
-                        ? dragOver.where === "above"
-                          ? "inset 0 2px 0 rgba(120,200,255,0.75)"
-                          : "inset 0 -2px 0 rgba(120,200,255,0.75)"
-                        : "none"
+                    boxShadow: rowShadow
                   }}
-                  title={t("settings.dragReorderLevels")}
                 >
                   <td>
-                    <GripVertical
-                      size={20}
+                    <span
+                      title={t("settings.dragReorderLevels")}
                       style={{
-                        opacity: 0.28,
-                        display: "block"
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "grab",
+                        userSelect: "none"
                       }}
-                    />
+                    >
+                      <GripVertical
+                        size={20}
+                        style={{
+                          opacity: 0.28,
+                          display: "block"
+                        }}
+                      />
+                    </span>
                   </td>
 
                   <td className="muted">{idx + 1}</td>
@@ -215,6 +277,7 @@ function LevelsCard({
                       cents={l.small_blind_cents ?? 0}
                       size={20}
                       editable
+                      disabled={isBreak}
                       onChange={(cents) => updateLevel(idx, { small_blind_cents: cents })}
                     />
                   </td>
@@ -224,6 +287,7 @@ function LevelsCard({
                       cents={l.big_blind_cents ?? 0}
                       size={20}
                       editable
+                      disabled={isBreak}
                       onChange={(cents) => updateLevel(idx, { big_blind_cents: cents })}
                     />
                   </td>
@@ -233,6 +297,7 @@ function LevelsCard({
                       cents={l.ante_cents ?? 0}
                       size={20}
                       editable
+                      disabled={isBreak}
                       onChange={(cents) => updateLevel(idx, { ante_cents: cents })}
                     />
                   </td>
@@ -240,7 +305,7 @@ function LevelsCard({
                   <td>
                     <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
                       <button className="btn" onClick={() => moveLevel(idx, idx - 1)} disabled={idx === 0} title={t("levels.actions.moveUp")}>
-                        Up
+                        <MoveUp size={12} />
                       </button>
                       <button
                         className="btn"
@@ -248,10 +313,10 @@ function LevelsCard({
                         disabled={idx === levelsDraft.length - 1}
                         title={t("levels.actions.moveDown")}
                       >
-                        Down
+                        <MoveDown size={12} />
                       </button>
-                      <button className="btn danger" onClick={() => removeLevel(idx)}>
-                        {t("levels.actions.remove")}
+                      <button className="btn danger" onClick={() => removeLevel(idx)} title={t("levels.actions.remove")}>
+                        <X size={12} />
                       </button>
                     </div>
                   </td>
@@ -270,8 +335,13 @@ function LevelsCard({
         </table>
       </div>
 
-      <div className="muted" style={{ marginTop: 10 }}>
-        {t("levels.breakTip")}
+      <div className="row" style={{ gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+        <div className="muted" style={{ padding: "8px 10px", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8 }}>
+          {t("levels.summary.totalDuration")}: <strong style={{ opacity: 1 }}>{formatDuration(totalMinutes)}</strong>
+        </div>
+        <div className="muted" style={{ padding: "8px 10px", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8 }}>
+          {t("levels.summary.breakDuration")}: <strong style={{ opacity: 1 }}>{formatDuration(breakMinutes)}</strong>
+        </div>
       </div>
     </div>
   );

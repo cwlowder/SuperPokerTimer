@@ -57,6 +57,13 @@
     "duration": "Duration",
     "noLevel": "No levels yet.",
     "breakTip": "Tip: Break levels ignore blinds/antes.",
+    "summary": {
+      "totalDuration": "Total tournament time",
+      "breakDuration": "Total break time",
+      "durationHoursMinutes": "{{hours}}h {{minutes}}m",
+      "durationHours": "{{hours}}h",
+      "durationMinutes": "{{minutes}}m"
+    },
     "actions": {
       "save": "Save levels",
       "delete": "Delete level",

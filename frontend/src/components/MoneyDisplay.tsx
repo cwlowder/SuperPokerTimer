@@ -19,6 +19,7 @@ export default function MoneyDisplay({
   onChange?: (cents: number) => void;
 }) {
   const { dollars, cents: cc } = centsToMoney(cents);
+  const isEditableDisabled = editable && disabled;
 
   const [draft, setDraft] = useState((cents / 100).toFixed(2));
 
@@ -39,7 +40,9 @@ export default function MoneyDisplay({
           fontSize: size,
           fontWeight: 800,
           width: 110,
-          opacity: muted ? 0.8 : 1
+          opacity: isEditableDisabled ? 0.5 : muted ? 0.8 : 1,
+          cursor: isEditableDisabled ? "not-allowed" : "text",
+          color: isEditableDisabled ? "rgba(231, 238, 247, 0.7)" : undefined
         }}
         onChange={(e) => {
           const value = e.target.value;
