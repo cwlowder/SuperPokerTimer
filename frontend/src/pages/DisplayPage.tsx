@@ -38,12 +38,6 @@ export default function DisplayPage() {
       <div style={{ marginTop: 12 }}>
         <Announcements items={announcements} playersById={playersById} tablesById={tablesById} compact />
       </div>
-
-      <div className="card" style={{ marginTop: 12 }}>
-        <div className="muted">
-          If you run <span className="kbd">Randomize</span> or <span className="kbd">Rebalance</span> from the admin UI, the latest seat moves appear above.
-        </div>
-      </div>
     </div>
   );
 }
