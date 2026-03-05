@@ -28,7 +28,7 @@ const PokerTable = React.forwardRef<SVGSVGElement, LucideProps>(
         xmlns="http://www.w3.org/2000/svg"
         width={size}
         height={size}
-        viewBox="0 0 26 26"
+        viewBox="0 0 24 24"
         fill="none"
         stroke={color}
         strokeWidth={computedStrokeWidth}
@@ -39,22 +39,14 @@ const PokerTable = React.forwardRef<SVGSVGElement, LucideProps>(
           .join(" ")}
         {...rest}
       >
-        {/* tabletop */}
-        <path d="M3.5 8h19" />
-
-        {/* rim */}
-        <path d="M3 8l3-3h14l3 3" />
-
-        {/* outer legs */}
-        {/*<path d="M3 10v12" />
-        <path d="M23 10v12" />
-        */}
-        <path d="M3 8v12" />
-        <path d="M23 8v12" />
-
-        {/* inner supports */}
-        <path d="M7 12v5" />
-        <path d="M19 12v5" />
+        <path d="M 18 11 L 18 16" />
+        <path d="M 19 4 L 22 7" />
+        <path d="M 2 7 L 2 21" />
+        <path d="M 2 7 L 5 4" />
+        <path d="M 2.5 7 L 21.5 7" />
+        <path d="M 22 7 L 22 21" />
+        <path d="M 5 4 L 19 4" />
+        <path d="M 6 11 L 6 16" />
       </svg>
     );
   }

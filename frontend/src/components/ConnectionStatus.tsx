@@ -3,8 +3,8 @@ import {
   ClockAlert,
   ClockCheck,
   ClockFading,
-  WifiOff,
-  Wifi,
+  Globe,
+  GlobeOff,
   Volume1,
   Volume2,
   VolumeOff,
@@ -25,9 +25,9 @@ export default function ConnectionStatus({
 
   // ---- WebSocket status ----
   const wsIcon = connected ? (
-    <Wifi size={size} />
+    <Globe size={size} />
   ) : (
-    <WifiOff size={size} />
+    <GlobeOff size={size} />
   );
 
   const wsColor = connected
