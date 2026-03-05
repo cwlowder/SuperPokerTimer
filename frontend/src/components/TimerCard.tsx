@@ -6,6 +6,8 @@ import {
   CupSoda,
   PiggyBank,
   Coffee,
+  Club,
+  Heart,
   Spade,
   CircleDollarSign,
   Wine,
@@ -13,7 +15,9 @@ import {
   Martini,
   Pause,
   OctagonPause,
-  PauseIcon
+  PauseIcon,
+  MoonStar,
+  PartyPopper
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -56,7 +60,7 @@ export default function TimerCard({
   const iconSize = bigPic ? 520 : 260;
 
   // Randomize which background we see based on current level + minutes left
-  const breakIcons = [CupSoda, PiggyBank, Coffee, Wine, Clock, Spade, CircleDollarSign, Martini];
+  const breakIcons = [CupSoda, PiggyBank, Coffee, Wine, Clock, Club, Heart, Spade, CircleDollarSign, Martini, MoonStar, PartyPopper];
   const secondsLeft = Math.round(remainingMs / SECOND_MS);
   const seed = idx * 1000 + secondsLeft;
   const BreakIcon = breakIcons[seededIndex(seed, breakIcons.length)]
