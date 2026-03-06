@@ -1,0 +1,38 @@
+################################################################################
+# Production Docker Compose for Poker Tournament Timer
+#
+# Quick start:
+#   cp .env.example .env    # edit values as needed
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Uses pre-built images from GHCR by default. To build from source:
+#   docker compose -f docker-compose.prod.yml up -d --build
+################################################################################
+
+services:
+  app:
+    image: ghcr.io/cwlowder/pokertourney:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - pokertourney_data:/data
+      - pokertourney_sounds:/sounds
+    environment:
+      - DATABASE_PATH=/data/app.db
+      - SOUNDS_DIR=/sounds
+      - STATIC_DIR=./static
+      - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+volumes:
+  pokertourney_data:
+  pokertourney_sounds:
