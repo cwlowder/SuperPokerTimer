@@ -24,12 +24,14 @@ type PongSample = { rtt: number; offset: number; t: number };
 let samples: PongSample[] = [];
 const SAMPLE_WINDOW = 3;
 let pingPeriodMs = 2000; // current target period
+let hasPongSample = false; // true once we have at least one pong-based measurement
 
-// Allow stoping of the ping loop
+// Allow stopping of the ping loop
 let pingLooper: number | null = null;
 let stableSinceMs: number | null = null;
 
-let timerStatus: "excelent" | "good" | "neutral" | "bad" | "unknown" =  "unknown";
+export type TimerSyncStatus = "excellent" | "good" | "neutral" | "bad" | "unknown";
+let timerStatus: TimerSyncStatus = "unknown";
 
 let offsetEmaAbsErr = 0;   // ms, EMA of |offset - offsetMs|
 let rttEma = 0;            // ms, EMA of RTT
@@ -54,6 +56,17 @@ function emit() {
   for (const fn of listeners) fn(store);
 }
 
+/** Reset all clock-sync state. Called on each new WS connection. */
+function resetClockSync() {
+  samples = [];
+  hasPongSample = false;
+  offsetEmaAbsErr = 0;
+  rttEma = 0;
+  stableSinceMs = null;
+  timerStatus = "unknown";
+  pingPeriodMs = 500; // start fast on fresh connection
+}
+
 export function serverNowMs() {
   return Date.now() + offsetMs;
 }
@@ -71,10 +84,16 @@ function updateOffsetFromPong(clientSendMs: number, serverTimeMs: number) {
   let best = samples[0];
   for (const s of samples) if (s.rtt < best.rtt) best = s;
 
-  // smooth offset toward best sample
-  const alpha = 0.15;
-  const prevOffset = offsetMs;
-  offsetMs = offsetMs * (1 - alpha) + best.offset * alpha;
+  // On the very first pong, snap directly to the best estimate instead of
+  // blending with the (potentially stale) bootstrap value.
+  if (!hasPongSample) {
+    hasPongSample = true;
+    offsetMs = best.offset;
+  } else {
+    // smooth offset toward best sample
+    const alpha = 0.15;
+    offsetMs = offsetMs * (1 - alpha) + best.offset * alpha;
+  }
 
   // --- track "inaccuracy" ---
   // how far the new measurement is from our current estimate
@@ -104,8 +123,6 @@ function updateOffsetFromPong(clientSendMs: number, serverTimeMs: number) {
     stableSinceMs = null;
   }
 
-  // export type Announcement = { id?: number; created_at_ms: number; type: string; payload: any; };
-
   // If not stable, ping faster
   if (offsetEmaAbsErr > BAD_ERR_MS) {
     timerStatus = "bad";
@@ -122,7 +139,7 @@ function updateOffsetFromPong(clientSendMs: number, serverTimeMs: number) {
 
   // If very stable for 10s, slow down
   if (stableSinceMs != null && now - stableSinceMs > 10_000) {
-    timerStatus = "excelent";
+    timerStatus = "excellent";
     startPingLoop(5000);
     return;
   }
@@ -158,25 +175,25 @@ function stopPingLoop() {
   pingLooper = null;
 }
 
+/**
+ * Rough bootstrap for offset using a server timestamp embedded in a message.
+ * Only used before the first pong arrives — once we have RTT-based measurements,
+ * those are strictly more accurate than a one-way timestamp with unknown latency.
+ */
 function seedOffsetFromServerTime(server_time_ms: number) {
+  if (hasPongSample) return; // pong-based sync is active, don't corrupt it
   const guess = server_time_ms - Date.now();
-  // gentle blend
+  // gentle blend in case multiple seeds arrive before first pong
   offsetMs = offsetMs * 0.7 + guess * 0.3;
 }
 
 function computeRemainingMs(state: State | null): number | null {
   if (!state) return null;
-  const s: any = state as any;
 
-  if (s.running) {
-    if (typeof s.finish_at_server_ms !== "number") return null;
-    return Math.max(0, s.finish_at_server_ms - serverNowMs());
-  } else {
-    if (typeof s.remaining_s === "number") return Math.max(0, s.remaining_s * 1000);
-    // Back-compat if old server still sends remaining_ms
-    if (typeof s.remaining_ms === "number") return Math.max(0, s.remaining_ms);
-    return null;
+  if (state.running) {
+    return Math.max(0, state.finish_at_server_ms - serverNowMs());
   }
+  return Math.max(0, state.remaining_ms);
 }
 
 async function ensureInitialState() {
@@ -208,20 +225,20 @@ function ensureSocket() {
       wsConnecting = false;
       retry = 0;
       store.connected = true;
+
+      // Reset sync state for the new connection so stale EMA values
+      // from a previous session don't affect the fresh handshake.
+      resetClockSync();
       emit();
 
-      // immediate sync ping + start ping loop
-      try {
-        const client_send_ms = Date.now();
-        ws?.send(JSON.stringify({ type: "ping", payload: { client_send_ms } }));
-      } catch {
-        // ignore
-      }
-      startPingLoop(pingPeriodMs);
+      // immediate sync ping + start fast ping loop
+      sendPing();
+      startPingLoop(pingPeriodMs); // pingPeriodMs was set to 500 by resetClockSync
     };
 
     ws.onclose = () => {
       store.connected = false;
+      timerStatus = "unknown";
       emit();
       ws = null;
       wsConnecting = false;
@@ -253,9 +270,8 @@ function ensureSocket() {
           store.settings = msg.payload.settings;
           store.state = msg.payload.state;
 
-          const st: any = msg.payload.state as any;
-          if (typeof st?.server_time_ms === "number") {
-            seedOffsetFromServerTime(st.server_time_ms);
+          if (typeof msg.payload.state.server_time_ms === "number") {
+            seedOffsetFromServerTime(msg.payload.state.server_time_ms);
           }
 
           emit();
@@ -263,12 +279,13 @@ function ensureSocket() {
         }
 
         if (msg.type === "tick") {
-          // Optional: keep merging non-time fields. Time should be derived from finish_at_server_ms.
-          store.state = store.state ? ({ ...(store.state as any), ...(msg.payload as any) } as State) : (msg.payload as State);
+          // Merge non-time fields. Time should be derived from finish_at_server_ms.
+          store.state = store.state
+            ? { ...store.state, ...msg.payload } as State
+            : msg.payload as State;
 
-          const st: any = store.state as any;
-          if (typeof st?.server_time_ms === "number") {
-            seedOffsetFromServerTime(st.server_time_ms);
+          if (typeof store.state?.server_time_ms === "number") {
+            seedOffsetFromServerTime(store.state.server_time_ms);
           }
 
           emit();
@@ -349,5 +366,5 @@ export function useEventStream() {
     };
   }, []);
 
-  return { settings, state, remainingMs, lastSound, announcements, connected, serverNowMs, timerStatus };
+  return { settings, state, remainingMs, lastSound, announcements, connected, serverNowMs, timerStatus: (store.connected ? timerStatus : "unknown") as TimerSyncStatus };
 }

@@ -8,7 +8,7 @@ from .db import get_settings, set_settings, get_state, list_announcements
 from .events import EventBus
 from .timer import TimerService
 from .seating import randomize_seating, rebalance, deseat_seating, normalize_seats
-from .utils import now_ms
+from .utils import now_ms, format_state
 
 router = APIRouter()
 
@@ -24,7 +24,8 @@ async def health():
 async def read_state(request: Request):
     conn: aiosqlite.Connection = request.app.state.db
     settings = await get_settings(conn)
-    state = await get_state(conn)
+    raw_state = await get_state(conn)
+    state = format_state(raw_state)
     return {"settings": settings, "state": state}
 
 @router.put("/settings")
