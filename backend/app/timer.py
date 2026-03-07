@@ -1,19 +1,20 @@
-import asyncio, time
+import asyncio
 from typing import Optional
 from .events import EventBus, Event
 from .db import get_settings, get_state, set_state, add_announcement
+from .utils import now_ms, format_state
 
-def now_ms() -> int:
-    return int(time.time() * 1000)
 
 class TimerService:
     """
     Server-truth timer model:
       - When running: we store finish_at_server_ms (absolute server time)
-      - When paused: we store remaining_ms (and broadcast remaining_s)
+      - When paused: we store remaining_ms
+      - All client-facing state goes through format_state() which always sends
+        both remaining_ms and finish_at_server_ms (0 when paused).
       - Clients render:
-          running  => finish_at_server_ms - (serverNowMs)
-          paused   => remaining_s
+          running  => finish_at_server_ms - serverNowMs()
+          paused   => remaining_ms
     """
 
     def __init__(self, *, conn, bus: EventBus) -> None:
@@ -84,20 +85,12 @@ class TimerService:
     async def _emit_full_state(self) -> None:
         settings = await get_settings(self.conn)
 
-        if self.running:
-            payload_state = {
-                "current_level_index": self.current_level_index,
-                "running": True,
-                "server_time_ms": now_ms(),
-                "finish_at_server_ms": int(self.finish_at_server_ms),
-            }
-        else:
-            payload_state = {
-                "current_level_index": self.current_level_index,
-                "running": False,
-                "server_time_ms": now_ms(),
-                "remaining_s": int(max(0, self.remaining_ms) // 1000),
-            }
+        payload_state = format_state({
+            "current_level_index": self.current_level_index,
+            "running": self.running,
+            "remaining_ms": self.remaining_ms,
+            "finish_at_server_ms": self.finish_at_server_ms,
+        })
 
         await self.bus.publish(Event("state", {
             "state": payload_state,

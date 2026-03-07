@@ -2,7 +2,7 @@ import asyncio
 from typing import Set, Dict, Any
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from .db import get_settings, get_state
-from .utils import now_ms
+from .utils import now_ms, format_state
 
 router = APIRouter()
 
@@ -47,7 +47,8 @@ async def websocket_endpoint(ws: WebSocket):
 
     async def send_initial_state():
         settings = await get_settings(conn)
-        state = await get_state(conn)  # should include server_time_ms + finish_at_server_ms OR remaining_ms
+        raw_state = await get_state(conn)
+        state = format_state(raw_state)
         await ws.send_json({"type": "state", "payload": {"settings": settings, "state": state}})
 
     async def recv_loop():
