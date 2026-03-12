@@ -1,7 +1,7 @@
 import React from "react";
 import MoneyDisplay from "./MoneyDisplay";
 import { msToClock } from "../utils/time";
-import { Level, State } from "../types";
+import { Denomination, Level, State } from "../types";
 import {
   CupSoda,
   PiggyBank,
@@ -33,12 +33,16 @@ export default function TimerCard({
   state,
   levels,
   remainingMs,
-  bigPic = false
+  bigPic = false,
+  currencySymbol = "$",
+  denomination = "cents"
 }: {
   state: State;
   levels: Level[];
   remainingMs: number;
   bigPic?: boolean;
+  currencySymbol?: string;
+  denomination?: Denomination;
 }) {
   const { t } = useTranslation();
 
@@ -131,13 +135,13 @@ export default function TimerCard({
                 <div className={`${blindClass}`}>{t("timer.breakText")}</div>
               ) : (
                 <div className={`${blindClass}`}>
-                  <MoneyDisplay cents={cur?.small_blind_cents ?? 0} size={blindSize} />
+                  <MoneyDisplay cents={cur?.small_blind_cents ?? 0} size={blindSize} currencySymbol={currencySymbol} denomination={denomination} />
                   <span className="muted"> / </span>
-                  <MoneyDisplay cents={cur?.big_blind_cents ?? 0} size={blindSize} />
+                  <MoneyDisplay cents={cur?.big_blind_cents ?? 0} size={blindSize} currencySymbol={currencySymbol} denomination={denomination} />
                   {cur?.ante_cents ? (
                     <>
                       <span className="muted"> • {t("common.ante")} </span>
-                      <MoneyDisplay cents={cur.ante_cents} size={blindSize} muted />
+                      <MoneyDisplay cents={cur.ante_cents} size={blindSize} muted currencySymbol={currencySymbol} denomination={denomination} />
                     </>
                   ) : null}
                 </div>
@@ -154,9 +158,9 @@ export default function TimerCard({
                 <div className={`muted ${blindClass}`}>{t("timer.breakNextMin", { min : next.minutes })}</div>
               ) : (
                 <div className={`muted ${blindClass}`}>
-                  <MoneyDisplay cents={next.small_blind_cents} size={blindSize} muted />
+                  <MoneyDisplay cents={next.small_blind_cents} size={blindSize} muted currencySymbol={currencySymbol} denomination={denomination} />
                   <span className="muted"> / </span>
-                  <MoneyDisplay cents={next.big_blind_cents} size={blindSize} muted />
+                  <MoneyDisplay cents={next.big_blind_cents} size={blindSize} muted currencySymbol={currencySymbol} denomination={denomination} />
                   <span className="muted"> • {t("timer.nextMin", { min: next.minutes })}</span>
                 </div>
               )

@@ -181,6 +181,17 @@
     "end": "Play when the tournament ends (no more levels)"
   },
 
+  "currency": {
+    "sectionTitle": "Currency & Format",
+    "helpText": "Choose how blind and ante values are displayed.",
+    "symbol": "Currency Symbol",
+    "denomination": "Value Format",
+    "denominationCents": "Fractional (e.g. 2.50)",
+    "denominationWhole": "Whole (e.g. 250)",
+    "preview": "Preview",
+    "save": "Save currency"
+  },
+
   "seating": {
     "sectionTitle": "Seating",
     "helpText": "Prefer fewer tables so each used table has at least this many players (when possible).",

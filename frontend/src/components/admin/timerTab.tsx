@@ -1,4 +1,4 @@
-import { Announcement, Player, Settings, Table } from "../../types";
+import { Announcement, Denomination, Player, Settings, Table } from "../../types";
 import Announcements from "../Announcements";
 import TimerCard from "../TimerCard";
 import { RotateCw, RotateCcw, FastForward, Rewind, TimerReset, Pause, Play } from "lucide-react";
@@ -15,7 +15,9 @@ export function TimerTab({
   onResume,
   onReset,
   onAddTime,
-  onGoLevel
+  onGoLevel,
+  currencySymbol = "$",
+  denomination = "cents"
 }: {
   settings: Settings | null;
   state: any | null;
@@ -28,6 +30,8 @@ export function TimerTab({
   onReset: () => Promise<any>;
   onAddTime: (ms: number) => Promise<any>;
   onGoLevel: (idx: number) => Promise<any>;
+  currencySymbol?: string;
+  denomination?: Denomination;
 }) {
   const { t } = useTranslation();
 
@@ -45,7 +49,7 @@ export function TimerTab({
     <div className="row" style={{ marginTop: 12 }}>
       <div className="col">
         {settings && state ? (
-          <TimerCard state={state} levels={settings.levels} remainingMs={remainingMs ?? 0} />
+          <TimerCard state={state} levels={settings.levels} remainingMs={remainingMs ?? 0} currencySymbol={currencySymbol} denomination={denomination} />
         ) : (
           <div className="card">{t("common.loading")}</div>
         )}

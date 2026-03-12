@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import TimerCard from "../components/TimerCard";
 import SoundPlayer from "../components/SoundPlayer";
 import { apiDelete, apiPatch, apiPost, apiPut } from "../utils/api";
-import { Announcement, Player, Seat, Level, Table } from "../types";
+import { Announcement, Denomination, Player, Seat, Level, Table } from "../types";
 import { useEventStream } from "../hooks/useEventStream";
 import { useTourneyData } from "../hooks/useTourneyData";
 import { AdminHeader, AdminTabs, Tab } from "../components/admin/common";
@@ -180,6 +180,17 @@ export default function AdminPage() {
     await reload();
   };
 
+  // ---- Currency ----
+  const currencySymbol = settings?.currency?.symbol ?? "$";
+  const denomination: Denomination = settings?.currency?.denomination ?? "cents";
+
+  const saveCurrency = async (symbol: string, denom: Denomination) => {
+    if (!settings) return;
+    const next = { ...settings, currency: { symbol, denomination: denom } };
+    await apiPut("/api/settings", next);
+    await reload();
+  };
+
   const soundToPlayNow = lastSound ?? soundPreview;
 
   return (
@@ -208,6 +219,8 @@ export default function AdminPage() {
           onReset={timerReset}
           onAddTime={timerAdd}
           onGoLevel={timerGo}
+          currencySymbol={currencySymbol}
+          denomination={denomination}
         />
       ) : null}
 
@@ -232,6 +245,8 @@ export default function AdminPage() {
           setLevelsDraft={setLevelsDraft}
           setLevelsDirty={setLevelsDirty}
           onSaveLevels={saveLevels}
+          currencySymbol={currencySymbol}
+          denomination={denomination}
         />
       ) : null}
 
@@ -261,6 +276,7 @@ export default function AdminPage() {
           onSetSound={setSound}
           onPreviewSound={(file) => setSoundPreview({ file, playId: Date.now() })}
           onSaveSeating={saveSeating}
+          onSaveCurrency={saveCurrency}
         />
       ) : null}
     </div>

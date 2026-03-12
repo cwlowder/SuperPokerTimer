@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { centsToMoney } from "../utils/time";
+import { centsToMoney, centsToWhole } from "../utils/money";
+import { Denomination } from "../types";
 
 export default function MoneyDisplay({
   cents,
@@ -8,6 +9,8 @@ export default function MoneyDisplay({
   editable = false,
   disabled = false,
   increment = 0.1,
+  currencySymbol = "$",
+  denomination = "cents",
   onChange
 }: {
   cents: number;
@@ -16,23 +19,31 @@ export default function MoneyDisplay({
   editable?: boolean;
   disabled?: boolean;
   increment?: number;
+  currencySymbol?: string;
+  denomination?: Denomination;
   onChange?: (cents: number) => void;
 }) {
-  const { dollars, cents: cc } = centsToMoney(cents);
+  const isWhole = denomination === "whole";
   const isEditableDisabled = editable && disabled;
 
-  const [draft, setDraft] = useState((cents / 100).toFixed(2));
+  // For "whole" mode the stored value IS the display value (no /100 conversion).
+  // For "cents" mode the stored value is cents, display is dollars.cents.
+  const toDisplay = (c: number) => isWhole ? String(c) : (c / 100).toFixed(2);
+  const fromDisplay = (v: number) => isWhole ? Math.round(v) : Math.round(v * 100);
+  const editStep = isWhole ? 1 : increment;
+
+  const [draft, setDraft] = useState(toDisplay(cents));
 
   useEffect(() => {
-    setDraft((cents / 100).toFixed(2));
-  }, [cents]);
+    setDraft(toDisplay(cents));
+  }, [cents, denomination]);
 
   if (editable) {
     return (
       <input
         className="input"
         type="number"
-        step={increment.toFixed(2)}
+        step={isWhole ? String(editStep) : editStep.toFixed(2)}
         min="0"
         value={draft}
         disabled={disabled}
@@ -50,16 +61,27 @@ export default function MoneyDisplay({
 
           const parsed = Number(value);
           if (!isNaN(parsed) && onChange) {
-            onChange(Math.round(parsed * 100));
+            onChange(fromDisplay(parsed));
           }
         }}
       />
     );
   }
 
+  if (isWhole) {
+    const display = centsToWhole(cents);
+    return (
+      <span style={{ fontSize: size, fontWeight: 800, opacity: muted ? 0.8 : 1 }}>
+        {currencySymbol}{display}
+      </span>
+    );
+  }
+
+  const { dollars, cents: cc } = centsToMoney(cents);
+
   return (
     <span style={{ fontSize: size, fontWeight: 800, opacity: muted ? 0.8 : 1 }}>
-      ${dollars}
+      {currencySymbol}{dollars}
       <span
         style={{
           fontSize: Math.max(12, Math.round(size * 0.62)),
