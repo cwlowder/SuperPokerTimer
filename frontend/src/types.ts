@@ -30,9 +30,10 @@ export type Settings = {
 
 export type State = {
   current_level_index: number;
-  running: true;
+  running: boolean;
   server_time_ms: number;
   remaining_ms: number;
+  /** Absolute server time the level ends. >0 only when running; 0 when paused. */
   finish_at_server_ms: number;
 };
 

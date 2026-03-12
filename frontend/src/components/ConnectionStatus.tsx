@@ -41,11 +41,16 @@ export default function ConnectionStatus({
   let timerColor = "#9ca3af";
   let timerLabel = "Unknown";
 
-  if (timerStatus === "neutral" || !connected) {
+  if (!connected) {
+    // When disconnected, always show unknown — no sync is happening
+    timerIcon = <ClockFading size={size} />;
+    timerColor = "#9ca3af";
+    timerLabel = "No sync";
+  } else if (timerStatus === "unknown" || timerStatus === "neutral") {
     timerIcon = <ClockFading size={size} />;
     timerColor = "#eab308";
     timerLabel = "Syncing";
-  } else if (timerStatus === "excelent") {
+  } else if (timerStatus === "excellent") {
     timerIcon = <ClockCheck size={size} />;
     timerColor = "#22c55e";
     timerLabel = "Stable";
