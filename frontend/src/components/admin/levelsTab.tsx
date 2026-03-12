@@ -3,7 +3,7 @@ import { GripVertical, MoveUp, MoveDown, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import MoneyDisplay from "../MoneyDisplay";
-import { Level, Settings } from "../../types";
+import { Denomination, Level, Settings } from "../../types";
 
 function LevelsCard({
   settings,
@@ -11,7 +11,9 @@ function LevelsCard({
   levelsDirty,
   setLevelsDirty,
   setLevelsDraft,
-  onSave
+  onSave,
+  currencySymbol = "$",
+  denomination = "cents"
 }: {
   settings: Settings | null;
   levelsDraft: Level[];
@@ -19,6 +21,8 @@ function LevelsCard({
   setLevelsDirty: (b: boolean) => void;
   setLevelsDraft: React.Dispatch<React.SetStateAction<Level[]>>;
   onSave: () => Promise<void>;
+  currencySymbol?: string;
+  denomination?: Denomination;
 }) {
   const { t } = useTranslation();
 
@@ -278,6 +282,8 @@ function LevelsCard({
                       size={20}
                       editable
                       disabled={isBreak}
+                      currencySymbol={currencySymbol}
+                      denomination={denomination}
                       onChange={(cents) => updateLevel(idx, { small_blind_cents: cents })}
                     />
                   </td>
@@ -288,6 +294,8 @@ function LevelsCard({
                       size={20}
                       editable
                       disabled={isBreak}
+                      currencySymbol={currencySymbol}
+                      denomination={denomination}
                       onChange={(cents) => updateLevel(idx, { big_blind_cents: cents })}
                     />
                   </td>
@@ -298,6 +306,8 @@ function LevelsCard({
                       size={20}
                       editable
                       disabled={isBreak}
+                      currencySymbol={currencySymbol}
+                      denomination={denomination}
                       onChange={(cents) => updateLevel(idx, { ante_cents: cents })}
                     />
                   </td>
@@ -353,7 +363,9 @@ export function LevelsTab({
   levelsDirty,
   setLevelsDraft,
   setLevelsDirty,
-  onSaveLevels
+  onSaveLevels,
+  currencySymbol = "$",
+  denomination = "cents"
 }: {
   settings: Settings | null;
   levelsDraft: Level[];
@@ -361,6 +373,8 @@ export function LevelsTab({
   setLevelsDraft: React.Dispatch<React.SetStateAction<Level[]>>;
   setLevelsDirty: (b: boolean) => void;
   onSaveLevels: () => Promise<void>;
+  currencySymbol?: string;
+  denomination?: Denomination;
 }) {
   return (
     <div style={{ marginTop: 12 }}>
@@ -371,6 +385,8 @@ export function LevelsTab({
         setLevelsDraft={setLevelsDraft}
         setLevelsDirty={setLevelsDirty}
         onSave={onSaveLevels}
+        currencySymbol={currencySymbol}
+        denomination={denomination}
       />
     </div>
   );

@@ -14,6 +14,8 @@ export default function DisplayPage() {
 
   // Big picture is read-only, but still plays configured sounds.
   const levels = settings?.levels ?? [];
+  const currencySymbol = settings?.currency?.symbol ?? "$";
+  const denomination = settings?.currency?.denomination ?? "cents";
 
   // For rebalance announcement name resolution, we only have ids from announcements.
   // We'll show names embedded in payload when present.
@@ -29,7 +31,7 @@ export default function DisplayPage() {
 
       <div style={{ marginTop: 12 }}>
         {settings && state ? (
-          <TimerCard state={state} levels={levels} remainingMs={remainingMs ?? 0} bigPic />
+          <TimerCard state={state} levels={levels} remainingMs={remainingMs ?? 0} bigPic currencySymbol={currencySymbol} denomination={denomination} />
         ) : (
           <div className="card">Loading…</div>
         )}

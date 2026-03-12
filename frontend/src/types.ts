@@ -8,6 +8,8 @@ export type Level = {
   ante_cents: number;
 };
 
+export type Denomination = "cents" | "whole";
+
 export type Settings = {
   levels: Level[];
   sounds: {
@@ -19,6 +21,10 @@ export type Settings = {
   };
   seating?: {
     min_players_per_table?: number;
+  };
+  currency?: {
+    symbol?: string;
+    denomination?: Denomination;
   };
 };
 
