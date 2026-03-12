@@ -1,0 +1,17 @@
+.git
+.github
+*.md
+*.db
+*.sqlite
+*.sqlite3
+node_modules
+__pycache__
+*.pyc
+.venv
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.DS_Store
+nginx/
+sounds/*
+!sounds/.keep
