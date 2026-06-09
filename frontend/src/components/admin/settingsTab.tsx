@@ -1,9 +1,43 @@
 import { Denomination, Settings } from "../../types";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import { noVolume, halfVolume, fullVolume } from "../../hooks/useLocalSettings";
 import { useLocalSettingsCtx } from "../../context/LocalSettingsContext";
 import MoneyDisplay from "../MoneyDisplay";
+
+const LANGUAGE_OPTIONS: { code: string; label: string }[] = [
+  { code: "en", label: "English" },
+  { code: "es", label: "Español" },
+  { code: "pt-BR", label: "Português (Brasil)" },
+  { code: "de", label: "Deutsch" },
+  { code: "fr", label: "Français" },
+  { code: "ja", label: "日本語" },
+  { code: "zh-CN", label: "中文（简体）" },
+  { code: "eo", label: "Esperanto" },
+];
+
+function LanguageCard() {
+  const { t } = useTranslation();
+
+  return (
+    <div className="card">
+      <h3>{t("settings.language")}</h3>
+      <hr />
+      <select
+        className="input"
+        value={i18n.language}
+        onChange={(e) => i18n.changeLanguage(e.target.value)}
+      >
+        {LANGUAGE_OPTIONS.map((opt) => (
+          <option key={opt.code} value={opt.code}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 export function SeatingCard({
   settings,
@@ -284,6 +318,7 @@ export function SettingsTab({
 }) {
   return (
     <div className="row" style={{ marginTop: 12, display: "grid", gap: 12 }}>
+      <LanguageCard />
       <SoundsCard settings={settings} sounds={sounds} onSetSound={onSetSound} onPreview={onPreviewSound} />
       <CurrencyCard settings={settings} onSave={onSaveCurrency} />
       <SeatingCard settings={settings} onSave={onSaveSeating} />

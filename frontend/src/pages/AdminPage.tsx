@@ -1,5 +1,6 @@
 // src/pages/AdminPage.tsx
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import TimerCard from "../components/TimerCard";
 import SoundPlayer from "../components/SoundPlayer";
 import { apiDelete, apiPatch, apiPost, apiPut } from "../utils/api";
@@ -14,6 +15,7 @@ import { SettingsTab } from "../components/admin/settingsTab";
 import { LevelsTab } from "../components/admin/levelsTab";
 
 export default function AdminPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("timer");
 
   const { settings, state, remainingMs, lastSound, announcements: liveAnnouncements, connected, timerStatus } = useEventStream();
@@ -91,7 +93,7 @@ export default function AdminPage() {
     await reload();
   };
   const deletePlayer = async (p: Player) => {
-    if (!confirm(`Delete ${p.name}?`)) return;
+    if (!confirm(t("confirm.deletePlayer", { name: p.name }))) return;
     await apiDelete(`/api/players/${p.id}`);
     await reload();
   };
@@ -103,17 +105,17 @@ export default function AdminPage() {
     await apiPost("/api/tables", { name, seats });
     await reload();
   };
-  const updateTable = async (t: Table, patch: Partial<Table>) => {
-    await apiPatch(`/api/tables/${t.id}`, patch);
+  const updateTable = async (tbl: Table, patch: Partial<Table>) => {
+    await apiPatch(`/api/tables/${tbl.id}`, patch);
     await reload();
   };
-  const deleteTable = async (t: Table) => {
-    if (!confirm(`Delete ${t.name}?`)) return;
-    await apiDelete(`/api/tables/${t.id}`);
+  const deleteTable = async (tbl: Table) => {
+    if (!confirm(t("confirm.deleteTable", { name: tbl.name }))) return;
+    await apiDelete(`/api/tables/${tbl.id}`);
     await reload();
   };
-  const toggleEnabled = async (t: Table) => {
-    await apiPatch(`/api/tables/${t.id}`, { enabled: !t.enabled });
+  const toggleEnabled = async (tbl: Table) => {
+    await apiPatch(`/api/tables/${tbl.id}`, { enabled: !tbl.enabled });
     await reload();
   };
   const doRandomize = async () => {

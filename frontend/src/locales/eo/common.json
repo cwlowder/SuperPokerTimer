@@ -1,0 +1,277 @@
+{
+  "app": {
+    "title": "Pokera Tempomezurilo"
+  },
+
+  "admin": {
+    "title": "Administra Panelo",
+    "tabs": {
+      "timer": "Tempomezurilo",
+      "levels": "Niveloj",
+      "players": "Ludantoj",
+      "tables": "Tabloj",
+      "settings": "Agordoj"
+    }
+  },
+
+  "timer": {
+    "title": "Turnira Tempomezurilo",
+    "currentLevel": "Nuna Nivelo",
+    "remaining": "Restanta",
+    "nextLevel": "Sekva Nivelo",
+    "completed": "Finita",
+    "noMoreLevels": "Ne plu da niveloj",
+    "jumpToLevel": "Salti al Nivelo",
+    "addOneMinute": "+1 min",
+    "removeOneMinute": "-1 min",
+    "addTenSeconds": "+10 sek",
+    "removeTenSeconds": "-10 sek",
+    "controlsTitle": "Tempomezurila Regado",
+    "nextMin": "{{min}} min",
+    "breakNextMin": "Paŭzo ({{min}} min)",
+    "regular": "Regula",
+    "break": "Paŭzo",
+    "running": "Funkcianta",
+    "paused": "Paŭzita",
+    "breakText": "Prenu Paŭzon!",
+    "adminUrlText": "Telefona administra URL"
+  },
+
+  "controls": {
+    "start": "Komenci",
+    "pause": "Paŭzi",
+    "resume": "Daŭrigi",
+    "reset": "Restarigi",
+    "bigPicture": "Grandekrana Reĝimo",
+    "confirmReset": "Ĉu vi certas, ke vi volas restarigi la tempomesurilon?"
+  },
+
+  "levels": {
+    "title": "Niveloj",
+    "helpText": "Agordu nivelodaŭrojn kaj blindojn. Trenu vicojn por reordigi.",
+    "regular": "Regula",
+    "break": "Paŭzo",
+    "smallBlind": "Malgranda Blindo",
+    "bigBlind": "Granda Blindo",
+    "ante": "Anteo",
+    "duration": "Daŭro",
+    "noLevel": "Ankoraŭ neniuj niveloj.",
+    "breakTip": "Konsilo: Paŭzaj niveloj ignoras blindojn/anteojn.",
+    "summary": {
+      "totalDuration": "Tuta turnira tempo",
+      "breakDuration": "Tuta paŭza tempo",
+      "durationHoursMinutes": "{{hours}}h {{minutes}}m",
+      "durationHours": "{{hours}}h",
+      "durationMinutes": "{{minutes}}m"
+    },
+    "actions": {
+      "save": "Konservi nivelojn",
+      "delete": "Forigi nivelon",
+      "addRegular": "+ Regula nivelo",
+      "addBreak": "+ Paŭzo",
+      "remove": "Forigi",
+      "moveUp": "Movi Supren",
+      "moveDown": "Movi Malsupren",
+      "discard": "Forĵeti ŝanĝojn"
+    },
+    "columns": {
+      "number": "#",
+      "type": "Tipo",
+      "minutes": "Minutoj",
+      "sb": "MB",
+      "bb": "GB",
+      "ante": "Anteo",
+      "actions": "Agoj"
+    }
+  },
+
+  "players": {
+    "title": "Ludantoj",
+    "addPlayer": "Aldoni Ludanto(j)n",
+    "addHint": "Aldonu unu aŭ plurajn ludantojn al la turniro",
+    "addModalHint": "Enigu unu aŭ plurajn ludantnomojn. Vi povas apartigi nomojn per komoj aŭ premi Enter por aldoni ilin.",
+    "search": "Serĉi Ludantojn",
+    "searchPlaceholder": "Enigu ludantnomon...",
+    "searchHint": "Serĉu laŭ nomo por rapide trovi ludanton",
+    "renameHint": "Redaktu la nomon, poste alklaku aliloken",
+    "name": "Nomo",
+    "stack": "Stako",
+    "seat": "Sidloko",
+    "active_status": "Aktiva",
+    "eliminated_status": "Eliminita",
+    "noPlayers": "Neniuj ludantoj aldonitaj",
+    "pendingTitle": "Aldonotaj Ludantoj",
+    "pendingEmpty": "Ankoraŭ neniuj ludantoj aldonitaj",
+    "columns": {
+      "name": "Nomo",
+      "status": "Stato",
+      "seat": "Tablo/Sidloko",
+      "actions": "Agoj"
+    },
+    "actions": {
+      "eliminate": "Elimini",
+      "delete": "Forigi",
+      "undo": "Malfari",
+      "addToList": "Aldoni al Listo",
+      "remove": "Forigi"
+    }
+  },
+
+  "tables": {
+    "title": "Tabloj",
+    "newTableName": "Nova tablonomo",
+    "seats": "Sidlokoj",
+    "seatsCount_one": "{{count}} sidloko",
+    "seatsCount_other": "{{count}} sidlokoj",
+    "seatNumber": "sidloko {{num}}",
+
+    "pendingTitle": "Atendantaj Tabloj",
+    "pendingEmpty": "Ankoraŭ neniuj tabloj en la vico.",
+
+    "actions": {
+      "add": "Aldoni Tablo(j)n",
+      "addToList": "Aldoni al Listo",
+      "remove": "Forigi",
+      "enable": "Ebligi",
+      "disable": "Malebligi",
+      "delete": "Forigi Tablon",
+      "randomize": "Hazardigi",
+      "rebalance": "Reekvilibrigi",
+      "deseat": "Malsidigi"
+    },
+    "name": "Tablonomo",
+    "rename": "Renomi",
+    "dragMoveHint": "Trenu por reordigi tablojn",
+    "dropHint": "Faligi ludanton ĉi tien",
+    "noTables": "Neniuj tabloj agorditaj",
+    "addHint": "Krei kaj administri tablojn",
+    "addModalHint": "Enigu unu aŭ plurajn tablonomojn (apartigitajn per komoj). Elektu la saman sidloknombron por ĉiu.",
+    "seating": "Sidlokoj",
+    "unseatedTitle": "Nesidantaj",
+    "unseatedSearchPlaceholder": "Serĉi nesidantajn ludantojn...",
+    "unseatedEmpty": "Neniuj nesidantaj ludantoj",
+    "unseatedDropHint": "Faligi sidantan ludanton ĉi tien por malsidigi"
+  },
+
+  "settings": {
+    "title": "Agordoj",
+    "language": "Lingvo",
+    "startingChips": "Komencaj Ĵetonoj",
+    "blindStructure": "Blinda Strukturo",
+    "levelsTitle": "Nivela Agordo",
+    "save": "Konservi Agordojn",
+    "saved": "Agordoj sukcese konservitaj",
+    "autoSave": "Agordoj estas konservataj aŭtomate",
+    "dragReorderLevels": "Trenu por reordigi nivelojn"
+  },
+
+  "sound": {
+    "sectionTitle": "Sonaj Agordoj",
+    "volumeText": "Agordu sonlaŭtecon",
+    "volumeOff": "0%",
+    "volumeLow": "50%",
+    "volumeFull": "100%",
+    "helpText": "Agordu kiuj sonoj ludiĝas dum la turniro",
+    "preview": "Antaŭrigardo",
+    "none": "Neniu Sono",
+    "transition": "Ludi kiam la nivelo ŝanĝiĝas",
+    "half": "Ludi je duono de la nivelo",
+    "thirty": "Ludi kiam restas 30 sekundoj en la nivelo",
+    "five": "Ludi kiam restas 5 sekundoj en la nivelo",
+    "end": "Ludi kiam la turniro finiĝas (ne plu da niveloj)"
+  },
+
+  "currency": {
+    "sectionTitle": "Valuto kaj Formato",
+    "helpText": "Elektu kiel blindaj kaj anteaj valoroj estas montrataj.",
+    "symbol": "Valuta Simbolo",
+    "denomination": "Valora Formato",
+    "denominationCents": "Frakcio (ekz. 2.50)",
+    "denominationWhole": "Entjero (ekz. 250)",
+    "preview": "Antaŭrigardo",
+    "save": "Konservi valuton"
+  },
+
+  "seating": {
+    "sectionTitle": "Sidlokaro",
+    "helpText": "Preferi malpli da tabloj por ke ĉiu uzata tablo havu almenaŭ tiom da ludantoj (kiam eble).",
+    "minPlayersPerTable": "Minimumaj ludantoj por tablo",
+    "save": "Konservi sidlokaron"
+  },
+
+  "announcements": {
+    "title": "Anoncoj",
+    "latest": "Plej Nova",
+    "recent": "Lastaj",
+    "seatMove": "<0>{{player}}</0> al <1>{{toTable}}</1> sidloko <2>{{toSeat}}</2>",
+    "seatMoveWithFrom": "<0>{{player}}</0> de <1>{{fromTable}}</1> sidloko <2>{{fromSeat}}</2> al <3>{{toTable}}</3> sidloko <4>{{toSeat}}</4>",
+    "seat": "sidloko",
+    "from": "de",
+    "noneText": "Ankoraŭ neniuj anoncoj.",
+    "type": {
+      "deseat": "Sidlokoj forigitaj",
+      "level_change": "Nivela ŝanĝo",
+      "rebalance": "Reekvilibrigi sidlokojn",
+      "randomize": "Hazardiga sidlokado",
+      "rebalanceText": "Ludantoj estis reekvilibrigitaj inter tabloj.",
+      "randomizeText": "Ludantoj estis hazarde asignitaj al disponeblaj sidlokoj.",
+      "level_reset": "Nivelo restarigita",
+      "schedule_complete": "Programo finita"
+    },
+    "resetText": "Nivelo restarigita al komenco.",
+    "noSeatChangesText": "Neniuj sidlokaj ŝanĝoj.",
+    "deseatText": "Ĉiuj ludantoj forigitaj de sidlokoj",
+    "levelChange": "Progresita de nivelo <0>{{oldLevel}}</0> al <1>{{newLevel}}</1>",
+    "allSeatsEmptyText": "Ĉiuj sidlokoj nun estas malplenaj."
+  },
+
+  "nav": {
+    "admin": "Administri",
+    "bigPicture": "Grandekrano",
+    "displayMode": "Montrada reĝimo",
+    "adminMode": "Administra reĝimo"
+  },
+
+  "connection": {
+    "connected": "Konektita",
+    "disconnected": "Malkonektita",
+    "unknown": "Nekonata",
+    "syncing": "Sinkroniganta",
+    "stable": "Stabila",
+    "inSync": "Sinkronigita",
+    "outOfSync": "Malsinkronigita",
+    "soundOff": "Sono malŝaltita",
+    "volume50": "50%",
+    "volume100": "100%"
+  },
+
+  "display": {
+    "title": "Grandekrano",
+    "loading": "Ŝargante…"
+  },
+
+  "confirm": {
+    "deletePlayer": "Ĉu forigi {{name}}?",
+    "deleteTable": "Ĉu forigi {{name}}?"
+  },
+
+  "common": {
+    "yes": "Jes",
+    "no": "Ne",
+    "cancel": "Nuligi",
+    "confirm": "Konfirmi",
+    "edit": "Redakti",
+    "delete": "Forigi",
+    "close": "Fermi",
+    "save": "Konservi",
+    "loading": "Ŝargante…",
+    "saving": "Konservante…",
+    "error": "Okazis eraro",
+    "success": "Sukceso",
+    "enabled": "ebligita",
+    "disabled": "malebligita",
+    "level": "Nivelo",
+    "ante": "Anteo",
+    "blinds": "Blindoj"
+  }
+}

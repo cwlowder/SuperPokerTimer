@@ -1,0 +1,277 @@
+{
+  "app": {
+    "title": "ポーカータイマー"
+  },
+
+  "admin": {
+    "title": "管理パネル",
+    "tabs": {
+      "timer": "タイマー",
+      "levels": "レベル",
+      "players": "プレイヤー",
+      "tables": "テーブル",
+      "settings": "設定"
+    }
+  },
+
+  "timer": {
+    "title": "トーナメントタイマー",
+    "currentLevel": "現在のレベル",
+    "remaining": "残り",
+    "nextLevel": "次のレベル",
+    "completed": "完了",
+    "noMoreLevels": "レベルなし",
+    "jumpToLevel": "レベルに移動",
+    "addOneMinute": "+1分",
+    "removeOneMinute": "-1分",
+    "addTenSeconds": "+10秒",
+    "removeTenSeconds": "-10秒",
+    "controlsTitle": "タイマー操作",
+    "nextMin": "{{min}}分",
+    "breakNextMin": "休憩（{{min}}分）",
+    "regular": "通常",
+    "break": "休憩",
+    "running": "進行中",
+    "paused": "一時停止",
+    "breakText": "休憩しましょう！",
+    "adminUrlText": "スマホ管理URL"
+  },
+
+  "controls": {
+    "start": "開始",
+    "pause": "一時停止",
+    "resume": "再開",
+    "reset": "リセット",
+    "bigPicture": "大画面モード",
+    "confirmReset": "タイマーをリセットしてもよろしいですか？"
+  },
+
+  "levels": {
+    "title": "レベル",
+    "helpText": "レベルの時間とブラインドを設定してください。行をドラッグして並べ替えできます。",
+    "regular": "通常",
+    "break": "休憩",
+    "smallBlind": "スモールブラインド",
+    "bigBlind": "ビッグブラインド",
+    "ante": "アンティ",
+    "duration": "時間",
+    "noLevel": "レベルがまだありません。",
+    "breakTip": "ヒント：休憩レベルではブラインド/アンティは無視されます。",
+    "summary": {
+      "totalDuration": "トーナメント合計時間",
+      "breakDuration": "休憩合計時間",
+      "durationHoursMinutes": "{{hours}}時間{{minutes}}分",
+      "durationHours": "{{hours}}時間",
+      "durationMinutes": "{{minutes}}分"
+    },
+    "actions": {
+      "save": "レベルを保存",
+      "delete": "レベルを削除",
+      "addRegular": "+ 通常レベル",
+      "addBreak": "+ 休憩",
+      "remove": "削除",
+      "moveUp": "上に移動",
+      "moveDown": "下に移動",
+      "discard": "変更を破棄"
+    },
+    "columns": {
+      "number": "#",
+      "type": "タイプ",
+      "minutes": "分",
+      "sb": "SB",
+      "bb": "BB",
+      "ante": "アンティ",
+      "actions": "操作"
+    }
+  },
+
+  "players": {
+    "title": "プレイヤー",
+    "addPlayer": "プレイヤーを追加",
+    "addHint": "トーナメントにプレイヤーを追加する",
+    "addModalHint": "プレイヤー名を入力してください。カンマで区切るか、Enterキーで追加できます。",
+    "search": "プレイヤーを検索",
+    "searchPlaceholder": "プレイヤー名を入力...",
+    "searchHint": "名前で検索してプレイヤーをすばやく見つける",
+    "renameHint": "名前を編集し、外側をクリック",
+    "name": "名前",
+    "stack": "スタック",
+    "seat": "席",
+    "active_status": "アクティブ",
+    "eliminated_status": "脱落",
+    "noPlayers": "プレイヤーが追加されていません",
+    "pendingTitle": "追加予定のプレイヤー",
+    "pendingEmpty": "まだプレイヤーが追加されていません",
+    "columns": {
+      "name": "名前",
+      "status": "ステータス",
+      "seat": "テーブル/席",
+      "actions": "操作"
+    },
+    "actions": {
+      "eliminate": "脱落させる",
+      "delete": "削除",
+      "undo": "元に戻す",
+      "addToList": "リストに追加",
+      "remove": "削除"
+    }
+  },
+
+  "tables": {
+    "title": "テーブル",
+    "newTableName": "新しいテーブル名",
+    "seats": "席",
+    "seatsCount_one": "{{count}}席",
+    "seatsCount_other": "{{count}}席",
+    "seatNumber": "席{{num}}",
+
+    "pendingTitle": "保留中のテーブル",
+    "pendingEmpty": "まだテーブルがキューにありません。",
+
+    "actions": {
+      "add": "テーブルを追加",
+      "addToList": "リストに追加",
+      "remove": "削除",
+      "enable": "有効化",
+      "disable": "無効化",
+      "delete": "テーブルを削除",
+      "randomize": "ランダム配置",
+      "rebalance": "再配分",
+      "deseat": "席を解除"
+    },
+    "name": "テーブル名",
+    "rename": "名前変更",
+    "dragMoveHint": "ドラッグしてテーブルを並べ替え",
+    "dropHint": "ここにプレイヤーをドロップ",
+    "noTables": "テーブルが設定されていません",
+    "addHint": "テーブルを作成・管理",
+    "addModalHint": "テーブル名を入力してください（カンマ区切り）。各テーブルに同じ席数を選択してください。",
+    "seating": "席",
+    "unseatedTitle": "未着席",
+    "unseatedSearchPlaceholder": "未着席のプレイヤーを検索...",
+    "unseatedEmpty": "未着席のプレイヤーはいません",
+    "unseatedDropHint": "着席中のプレイヤーをここにドロップして席を解除"
+  },
+
+  "settings": {
+    "title": "設定",
+    "language": "言語",
+    "startingChips": "開始チップ",
+    "blindStructure": "ブラインド構成",
+    "levelsTitle": "レベル設定",
+    "save": "設定を保存",
+    "saved": "設定が正常に保存されました",
+    "autoSave": "設定は自動的に保存されます",
+    "dragReorderLevels": "ドラッグしてレベルを並べ替え"
+  },
+
+  "sound": {
+    "sectionTitle": "サウンド設定",
+    "volumeText": "音量を設定",
+    "volumeOff": "0%",
+    "volumeLow": "50%",
+    "volumeFull": "100%",
+    "helpText": "トーナメント中に再生するサウンドを設定",
+    "preview": "プレビュー",
+    "none": "サウンドなし",
+    "transition": "レベル変更時に再生",
+    "half": "レベルの半分で再生",
+    "thirty": "残り30秒で再生",
+    "five": "残り5秒で再生",
+    "end": "トーナメント終了時に再生（レベルなし）"
+  },
+
+  "currency": {
+    "sectionTitle": "通貨とフォーマット",
+    "helpText": "ブラインドとアンティの値の表示方法を選択してください。",
+    "symbol": "通貨記号",
+    "denomination": "値のフォーマット",
+    "denominationCents": "小数（例：2.50）",
+    "denominationWhole": "整数（例：250）",
+    "preview": "プレビュー",
+    "save": "通貨を保存"
+  },
+
+  "seating": {
+    "sectionTitle": "席配置",
+    "helpText": "テーブル数を少なくし、各テーブルに最低この人数のプレイヤーを配置します（可能な場合）。",
+    "minPlayersPerTable": "テーブルあたりの最小プレイヤー数",
+    "save": "席配置を保存"
+  },
+
+  "announcements": {
+    "title": "アナウンス",
+    "latest": "最新",
+    "recent": "最近",
+    "seatMove": "<0>{{player}}</0> → <1>{{toTable}}</1> 席<2>{{toSeat}}</2>",
+    "seatMoveWithFrom": "<0>{{player}}</0> <1>{{fromTable}}</1> 席<2>{{fromSeat}}</2> → <3>{{toTable}}</3> 席<4>{{toSeat}}</4>",
+    "seat": "席",
+    "from": "から",
+    "noneText": "まだアナウンスはありません。",
+    "type": {
+      "deseat": "席を解除",
+      "level_change": "レベル変更",
+      "rebalance": "席の再配分",
+      "randomize": "ランダム配置",
+      "rebalanceText": "プレイヤーがテーブル間で再配分されました。",
+      "randomizeText": "プレイヤーが空席にランダムに配置されました。",
+      "level_reset": "レベルリセット",
+      "schedule_complete": "スケジュール完了"
+    },
+    "resetText": "レベルが最初にリセットされました。",
+    "noSeatChangesText": "席の変更はありません。",
+    "deseatText": "全プレイヤーが席から外されました",
+    "levelChange": "レベル<0>{{oldLevel}}</0>から<1>{{newLevel}}</1>に進行",
+    "allSeatsEmptyText": "すべての席が空になりました。"
+  },
+
+  "nav": {
+    "admin": "管理",
+    "bigPicture": "大画面",
+    "displayMode": "表示モード",
+    "adminMode": "管理モード"
+  },
+
+  "connection": {
+    "connected": "接続済み",
+    "disconnected": "切断",
+    "unknown": "不明",
+    "syncing": "同期中",
+    "stable": "安定",
+    "inSync": "同期済み",
+    "outOfSync": "同期ずれ",
+    "soundOff": "音声オフ",
+    "volume50": "50%",
+    "volume100": "100%"
+  },
+
+  "display": {
+    "title": "大画面",
+    "loading": "読み込み中…"
+  },
+
+  "confirm": {
+    "deletePlayer": "{{name}}を削除しますか？",
+    "deleteTable": "{{name}}を削除しますか？"
+  },
+
+  "common": {
+    "yes": "はい",
+    "no": "いいえ",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "edit": "編集",
+    "delete": "削除",
+    "close": "閉じる",
+    "save": "保存",
+    "loading": "読み込み中…",
+    "saving": "保存中…",
+    "error": "エラーが発生しました",
+    "success": "成功",
+    "enabled": "有効",
+    "disabled": "無効",
+    "level": "レベル",
+    "ante": "アンティ",
+    "blinds": "ブラインド"
+  }
+}

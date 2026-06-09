@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import TimerCard from "../components/TimerCard";
 import Announcements from "../components/Announcements";
 import SoundPlayer from "../components/SoundPlayer";
@@ -9,6 +10,7 @@ import { useTourneyData } from "../hooks/useTourneyData";
 import { Player, Table } from "../types";
 
 export default function DisplayPage() {
+  const { t } = useTranslation();
   const { playersById, tablesById, sounds } = useTourneyData();
   const { settings, state, remainingMs, lastSound, announcements } = useEventStream();
 
@@ -25,7 +27,7 @@ export default function DisplayPage() {
       <SoundPlayer file={lastSound?.file ?? null} playId={lastSound?.playId} preloadFiles={sounds}/>
 
       <div className="row" style={{ alignItems: "baseline", justifyContent: "space-between" }}>
-        <h1 style={{ margin: 0 }}>Big Picture</h1>
+        <h1 style={{ margin: 0 }}>{t("display.title")}</h1>
         <ConnectionStatus size={25} muted/>
       </div>
 
@@ -33,7 +35,7 @@ export default function DisplayPage() {
         {settings && state ? (
           <TimerCard state={state} levels={levels} remainingMs={remainingMs ?? 0} bigPic currencySymbol={currencySymbol} denomination={denomination} />
         ) : (
-          <div className="card">Loading…</div>
+          <div className="card">{t("display.loading")}</div>
         )}
       </div>
 

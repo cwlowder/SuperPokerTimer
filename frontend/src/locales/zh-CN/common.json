@@ -1,0 +1,277 @@
+{
+  "app": {
+    "title": "扑克计时器"
+  },
+
+  "admin": {
+    "title": "管理面板",
+    "tabs": {
+      "timer": "计时器",
+      "levels": "级别",
+      "players": "玩家",
+      "tables": "桌子",
+      "settings": "设置"
+    }
+  },
+
+  "timer": {
+    "title": "锦标赛计时器",
+    "currentLevel": "当前级别",
+    "remaining": "剩余",
+    "nextLevel": "下一级别",
+    "completed": "已完成",
+    "noMoreLevels": "没有更多级别",
+    "jumpToLevel": "跳转到级别",
+    "addOneMinute": "+1分钟",
+    "removeOneMinute": "-1分钟",
+    "addTenSeconds": "+10秒",
+    "removeTenSeconds": "-10秒",
+    "controlsTitle": "计时器控制",
+    "nextMin": "{{min}}分钟",
+    "breakNextMin": "休息（{{min}}分钟）",
+    "regular": "常规",
+    "break": "休息",
+    "running": "进行中",
+    "paused": "已暂停",
+    "breakText": "休息一下！",
+    "adminUrlText": "手机管理网址"
+  },
+
+  "controls": {
+    "start": "开始",
+    "pause": "暂停",
+    "resume": "继续",
+    "reset": "重置",
+    "bigPicture": "大屏模式",
+    "confirmReset": "确定要重置计时器吗？"
+  },
+
+  "levels": {
+    "title": "级别",
+    "helpText": "配置级别时长和盲注。拖动行来重新排序。",
+    "regular": "常规",
+    "break": "休息",
+    "smallBlind": "小盲",
+    "bigBlind": "大盲",
+    "ante": "前注",
+    "duration": "时长",
+    "noLevel": "暂无级别。",
+    "breakTip": "提示：休息级别会忽略盲注/前注。",
+    "summary": {
+      "totalDuration": "锦标赛总时长",
+      "breakDuration": "休息总时长",
+      "durationHoursMinutes": "{{hours}}小时{{minutes}}分钟",
+      "durationHours": "{{hours}}小时",
+      "durationMinutes": "{{minutes}}分钟"
+    },
+    "actions": {
+      "save": "保存级别",
+      "delete": "删除级别",
+      "addRegular": "+ 常规级别",
+      "addBreak": "+ 休息",
+      "remove": "移除",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "discard": "放弃更改"
+    },
+    "columns": {
+      "number": "#",
+      "type": "类型",
+      "minutes": "分钟",
+      "sb": "小盲",
+      "bb": "大盲",
+      "ante": "前注",
+      "actions": "操作"
+    }
+  },
+
+  "players": {
+    "title": "玩家",
+    "addPlayer": "添加玩家",
+    "addHint": "向锦标赛添加一个或多个玩家",
+    "addModalHint": "输入一个或多个玩家姓名。可以用逗号分隔，或按回车键添加。",
+    "search": "搜索玩家",
+    "searchPlaceholder": "输入玩家姓名...",
+    "searchHint": "按姓名搜索以快速找到玩家",
+    "renameHint": "编辑姓名，然后点击其他地方",
+    "name": "姓名",
+    "stack": "筹码",
+    "seat": "座位",
+    "active_status": "活跃",
+    "eliminated_status": "已淘汰",
+    "noPlayers": "尚未添加玩家",
+    "pendingTitle": "待添加的玩家",
+    "pendingEmpty": "尚未添加任何玩家",
+    "columns": {
+      "name": "姓名",
+      "status": "状态",
+      "seat": "桌子/座位",
+      "actions": "操作"
+    },
+    "actions": {
+      "eliminate": "淘汰",
+      "delete": "删除",
+      "undo": "撤销",
+      "addToList": "添加到列表",
+      "remove": "移除"
+    }
+  },
+
+  "tables": {
+    "title": "桌子",
+    "newTableName": "新桌子名称",
+    "seats": "座位",
+    "seatsCount_one": "{{count}}个座位",
+    "seatsCount_other": "{{count}}个座位",
+    "seatNumber": "座位{{num}}",
+
+    "pendingTitle": "待添加的桌子",
+    "pendingEmpty": "队列中暂无桌子。",
+
+    "actions": {
+      "add": "添加桌子",
+      "addToList": "添加到列表",
+      "remove": "移除",
+      "enable": "启用",
+      "disable": "禁用",
+      "delete": "删除桌子",
+      "randomize": "随机分配",
+      "rebalance": "重新平衡",
+      "deseat": "取消入座"
+    },
+    "name": "桌子名称",
+    "rename": "重命名",
+    "dragMoveHint": "拖动以重新排列桌子",
+    "dropHint": "将玩家拖放到这里",
+    "noTables": "尚未配置桌子",
+    "addHint": "创建和管理桌子",
+    "addModalHint": "输入一个或多个桌子名称（用逗号分隔）。为每个桌子选择相同的座位数。",
+    "seating": "座位",
+    "unseatedTitle": "未入座",
+    "unseatedSearchPlaceholder": "搜索未入座的玩家...",
+    "unseatedEmpty": "没有未入座的玩家",
+    "unseatedDropHint": "将已入座的玩家拖放到这里以取消入座"
+  },
+
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "startingChips": "起始筹码",
+    "blindStructure": "盲注结构",
+    "levelsTitle": "级别配置",
+    "save": "保存设置",
+    "saved": "设置已成功保存",
+    "autoSave": "设置会自动保存",
+    "dragReorderLevels": "拖动以重新排列级别"
+  },
+
+  "sound": {
+    "sectionTitle": "声音设置",
+    "volumeText": "配置音量",
+    "volumeOff": "0%",
+    "volumeLow": "50%",
+    "volumeFull": "100%",
+    "helpText": "配置锦标赛期间播放的声音",
+    "preview": "预览",
+    "none": "无声音",
+    "transition": "级别变更时播放",
+    "half": "级别进行到一半时播放",
+    "thirty": "级别剩余30秒时播放",
+    "five": "级别剩余5秒时播放",
+    "end": "锦标赛结束时播放（没有更多级别）"
+  },
+
+  "currency": {
+    "sectionTitle": "货币与格式",
+    "helpText": "选择盲注和前注值的显示方式。",
+    "symbol": "货币符号",
+    "denomination": "数值格式",
+    "denominationCents": "小数（例如 2.50）",
+    "denominationWhole": "整数（例如 250）",
+    "preview": "预览",
+    "save": "保存货币"
+  },
+
+  "seating": {
+    "sectionTitle": "座位安排",
+    "helpText": "优先使用更少的桌子，使每个使用中的桌子至少有这么多玩家（如果可能）。",
+    "minPlayersPerTable": "每桌最少玩家数",
+    "save": "保存座位安排"
+  },
+
+  "announcements": {
+    "title": "公告",
+    "latest": "最新",
+    "recent": "最近",
+    "seatMove": "<0>{{player}}</0> 到 <1>{{toTable}}</1> 座位<2>{{toSeat}}</2>",
+    "seatMoveWithFrom": "<0>{{player}}</0> 从 <1>{{fromTable}}</1> 座位<2>{{fromSeat}}</2> 到 <3>{{toTable}}</3> 座位<4>{{toSeat}}</4>",
+    "seat": "座位",
+    "from": "从",
+    "noneText": "暂无公告。",
+    "type": {
+      "deseat": "座位已移除",
+      "level_change": "级别变更",
+      "rebalance": "重新平衡座位",
+      "randomize": "随机分配座位",
+      "rebalanceText": "玩家已在桌子间重新平衡。",
+      "randomizeText": "玩家已被随机分配到可用座位。",
+      "level_reset": "级别重置",
+      "schedule_complete": "赛程完成"
+    },
+    "resetText": "级别已重置到开始。",
+    "noSeatChangesText": "没有座位变更。",
+    "deseatText": "所有玩家已从座位上移除",
+    "levelChange": "从级别<0>{{oldLevel}}</0>进入<1>{{newLevel}}</1>",
+    "allSeatsEmptyText": "所有座位现在都是空的。"
+  },
+
+  "nav": {
+    "admin": "管理",
+    "bigPicture": "大屏",
+    "displayMode": "显示模式",
+    "adminMode": "管理模式"
+  },
+
+  "connection": {
+    "connected": "已连接",
+    "disconnected": "已断开",
+    "unknown": "未知",
+    "syncing": "同步中",
+    "stable": "稳定",
+    "inSync": "已同步",
+    "outOfSync": "同步异常",
+    "soundOff": "静音",
+    "volume50": "50%",
+    "volume100": "100%"
+  },
+
+  "display": {
+    "title": "大屏",
+    "loading": "加载中…"
+  },
+
+  "confirm": {
+    "deletePlayer": "删除{{name}}？",
+    "deleteTable": "删除{{name}}？"
+  },
+
+  "common": {
+    "yes": "是",
+    "no": "否",
+    "cancel": "取消",
+    "confirm": "确认",
+    "edit": "编辑",
+    "delete": "删除",
+    "close": "关闭",
+    "save": "保存",
+    "loading": "加载中…",
+    "saving": "保存中…",
+    "error": "发生错误",
+    "success": "成功",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "level": "级别",
+    "ante": "前注",
+    "blinds": "盲注"
+  }
+}

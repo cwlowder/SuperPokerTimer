@@ -1,0 +1,277 @@
+{
+  "app": {
+    "title": "Poker Timer"
+  },
+
+  "admin": {
+    "title": "Painel de Administração",
+    "tabs": {
+      "timer": "Cronômetro",
+      "levels": "Níveis",
+      "players": "Jogadores",
+      "tables": "Mesas",
+      "settings": "Configurações"
+    }
+  },
+
+  "timer": {
+    "title": "Cronômetro do Torneio",
+    "currentLevel": "Nível Atual",
+    "remaining": "Restante",
+    "nextLevel": "Próximo Nível",
+    "completed": "Concluído",
+    "noMoreLevels": "Não há mais níveis",
+    "jumpToLevel": "Ir para o Nível",
+    "addOneMinute": "+1 min",
+    "removeOneMinute": "-1 min",
+    "addTenSeconds": "+10 seg",
+    "removeTenSeconds": "-10 seg",
+    "controlsTitle": "Controles do Cronômetro",
+    "nextMin": "{{min}} min",
+    "breakNextMin": "Intervalo ({{min}} min)",
+    "regular": "Regular",
+    "break": "Intervalo",
+    "running": "Em andamento",
+    "paused": "Pausado",
+    "breakText": "Faça um Intervalo!",
+    "adminUrlText": "URL de administração do celular"
+  },
+
+  "controls": {
+    "start": "Iniciar",
+    "pause": "Pausar",
+    "resume": "Retomar",
+    "reset": "Reiniciar",
+    "bigPicture": "Modo Tela Grande",
+    "confirmReset": "Tem certeza de que deseja reiniciar o cronômetro?"
+  },
+
+  "levels": {
+    "title": "Níveis",
+    "helpText": "Configure a duração e os blinds de cada nível. Arraste as linhas para reordenar.",
+    "regular": "Regular",
+    "break": "Intervalo",
+    "smallBlind": "Small Blind",
+    "bigBlind": "Big Blind",
+    "ante": "Ante",
+    "duration": "Duração",
+    "noLevel": "Nenhum nível ainda.",
+    "breakTip": "Dica: Níveis de intervalo ignoram blinds/antes.",
+    "summary": {
+      "totalDuration": "Tempo total do torneio",
+      "breakDuration": "Tempo total de intervalo",
+      "durationHoursMinutes": "{{hours}}h {{minutes}}m",
+      "durationHours": "{{hours}}h",
+      "durationMinutes": "{{minutes}}m"
+    },
+    "actions": {
+      "save": "Salvar níveis",
+      "delete": "Excluir nível",
+      "addRegular": "+ Nível regular",
+      "addBreak": "+ Intervalo",
+      "remove": "Remover",
+      "moveUp": "Mover para Cima",
+      "moveDown": "Mover para Baixo",
+      "discard": "Descartar alterações"
+    },
+    "columns": {
+      "number": "#",
+      "type": "Tipo",
+      "minutes": "Minutos",
+      "sb": "SB",
+      "bb": "BB",
+      "ante": "Ante",
+      "actions": "Ações"
+    }
+  },
+
+  "players": {
+    "title": "Jogadores",
+    "addPlayer": "Adicionar Jogador(es)",
+    "addHint": "Adicione um ou mais jogadores ao torneio",
+    "addModalHint": "Digite um ou mais nomes de jogadores. Você pode separar os nomes com vírgulas ou pressionar Enter para adicioná-los.",
+    "search": "Buscar Jogadores",
+    "searchPlaceholder": "Digite o nome do jogador...",
+    "searchHint": "Busque por nome para encontrar um jogador rapidamente",
+    "renameHint": "Edite o nome e clique fora",
+    "name": "Nome",
+    "stack": "Fichas",
+    "seat": "Assento",
+    "active_status": "Ativo",
+    "eliminated_status": "Eliminado",
+    "noPlayers": "Nenhum jogador adicionado",
+    "pendingTitle": "Jogadores a Adicionar",
+    "pendingEmpty": "Nenhum jogador adicionado ainda",
+    "columns": {
+      "name": "Nome",
+      "status": "Status",
+      "seat": "Mesa/Assento",
+      "actions": "Ações"
+    },
+    "actions": {
+      "eliminate": "Eliminar",
+      "delete": "Excluir",
+      "undo": "Desfazer",
+      "addToList": "Adicionar à Lista",
+      "remove": "Remover"
+    }
+  },
+
+  "tables": {
+    "title": "Mesas",
+    "newTableName": "Nome da nova mesa",
+    "seats": "Assentos",
+    "seatsCount_one": "{{count}} assento",
+    "seatsCount_other": "{{count}} assentos",
+    "seatNumber": "assento {{num}}",
+
+    "pendingTitle": "Mesas Pendentes",
+    "pendingEmpty": "Nenhuma mesa na fila ainda.",
+
+    "actions": {
+      "add": "Adicionar Mesa(s)",
+      "addToList": "Adicionar à Lista",
+      "remove": "Remover",
+      "enable": "Habilitar",
+      "disable": "Desabilitar",
+      "delete": "Excluir Mesa",
+      "randomize": "Aleatorizar",
+      "rebalance": "Reequilibrar",
+      "deseat": "Remover Assentos"
+    },
+    "name": "Nome da Mesa",
+    "rename": "Renomear",
+    "dragMoveHint": "Arraste para reordenar mesas",
+    "dropHint": "Solte um jogador aqui",
+    "noTables": "Nenhuma mesa configurada",
+    "addHint": "Crie e gerencie mesas",
+    "addModalHint": "Digite um ou mais nomes de mesa (separados por vírgula). Escolha a mesma quantidade de assentos para cada uma.",
+    "seating": "Assentos",
+    "unseatedTitle": "Sem Assento",
+    "unseatedSearchPlaceholder": "Buscar jogadores sem assento...",
+    "unseatedEmpty": "Nenhum jogador sem assento",
+    "unseatedDropHint": "Solte um jogador sentado aqui para remover seu assento"
+  },
+
+  "settings": {
+    "title": "Configurações",
+    "language": "Idioma",
+    "startingChips": "Fichas Iniciais",
+    "blindStructure": "Estrutura de Blinds",
+    "levelsTitle": "Configuração de Níveis",
+    "save": "Salvar Configurações",
+    "saved": "Configurações salvas com sucesso",
+    "autoSave": "As configurações são salvas automaticamente",
+    "dragReorderLevels": "Arraste para reordenar níveis"
+  },
+
+  "sound": {
+    "sectionTitle": "Configurações de Som",
+    "volumeText": "Configure o volume do som",
+    "volumeOff": "0%",
+    "volumeLow": "50%",
+    "volumeFull": "100%",
+    "helpText": "Configure quais sons tocam durante o torneio",
+    "preview": "Pré-visualizar",
+    "none": "Sem Som",
+    "transition": "Tocar quando o nível mudar",
+    "half": "Tocar na metade do nível",
+    "thirty": "Tocar quando restarem 30 segundos do nível",
+    "five": "Tocar quando restarem 5 segundos do nível",
+    "end": "Tocar quando o torneio terminar (não há mais níveis)"
+  },
+
+  "currency": {
+    "sectionTitle": "Moeda e Formato",
+    "helpText": "Escolha como os valores de blinds e antes são exibidos.",
+    "symbol": "Símbolo da Moeda",
+    "denomination": "Formato do Valor",
+    "denominationCents": "Fracionário (ex. 2,50)",
+    "denominationWhole": "Inteiro (ex. 250)",
+    "preview": "Pré-visualização",
+    "save": "Salvar moeda"
+  },
+
+  "seating": {
+    "sectionTitle": "Assentos",
+    "helpText": "Preferir menos mesas para que cada mesa utilizada tenha pelo menos esta quantidade de jogadores (quando possível).",
+    "minPlayersPerTable": "Mínimo de jogadores por mesa",
+    "save": "Salvar assentos"
+  },
+
+  "announcements": {
+    "title": "Anúncios",
+    "latest": "Último",
+    "recent": "Recentes",
+    "seatMove": "<0>{{player}}</0> para <1>{{toTable}}</1> assento <2>{{toSeat}}</2>",
+    "seatMoveWithFrom": "<0>{{player}}</0> de <1>{{fromTable}}</1> assento <2>{{fromSeat}}</2> para <3>{{toTable}}</3> assento <4>{{toSeat}}</4>",
+    "seat": "assento",
+    "from": "de",
+    "noneText": "Nenhum anúncio ainda.",
+    "type": {
+      "deseat": "Assentos removidos",
+      "level_change": "Mudança de nível",
+      "rebalance": "Reequilibrar assentos",
+      "randomize": "Assentos aleatórios",
+      "rebalanceText": "Os jogadores foram reequilibrados entre as mesas.",
+      "randomizeText": "Os jogadores foram atribuídos aleatoriamente aos assentos disponíveis.",
+      "level_reset": "Nível reiniciado",
+      "schedule_complete": "Programação concluída"
+    },
+    "resetText": "Nível reiniciado ao início.",
+    "noSeatChangesText": "Sem mudanças de assento.",
+    "deseatText": "Todos os jogadores foram removidos dos assentos",
+    "levelChange": "Avançou do nível <0>{{oldLevel}}</0> para <1>{{newLevel}}</1>",
+    "allSeatsEmptyText": "Todos os assentos estão vazios."
+  },
+
+  "nav": {
+    "admin": "Admin",
+    "bigPicture": "Tela grande",
+    "displayMode": "Modo de exibição",
+    "adminMode": "Modo de administração"
+  },
+
+  "connection": {
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "unknown": "Desconhecido",
+    "syncing": "Sincronizando",
+    "stable": "Estável",
+    "inSync": "Sincronizado",
+    "outOfSync": "Fora de Sincronia",
+    "soundOff": "Som desligado",
+    "volume50": "50%",
+    "volume100": "100%"
+  },
+
+  "display": {
+    "title": "Tela Grande",
+    "loading": "Carregando…"
+  },
+
+  "confirm": {
+    "deletePlayer": "Excluir {{name}}?",
+    "deleteTable": "Excluir {{name}}?"
+  },
+
+  "common": {
+    "yes": "Sim",
+    "no": "Não",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "close": "Fechar",
+    "save": "Salvar",
+    "loading": "Carregando…",
+    "saving": "Salvando…",
+    "error": "Ocorreu um erro",
+    "success": "Sucesso",
+    "enabled": "habilitado",
+    "disabled": "desabilitado",
+    "level": "Nível",
+    "ante": "Ante",
+    "blinds": "Blinds"
+  }
+}

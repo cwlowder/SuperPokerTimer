@@ -225,6 +225,36 @@
     "allSeatsEmptyText": "All seats are now empty."
   },
 
+  "nav": {
+    "admin": "Admin",
+    "bigPicture": "Big picture",
+    "displayMode": "Display mode",
+    "adminMode": "Admin mode"
+  },
+
+  "connection": {
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "unknown": "Unknown",
+    "syncing": "Syncing",
+    "stable": "Stable",
+    "inSync": "In Sync",
+    "outOfSync": "Out of Sync",
+    "soundOff": "Sound off",
+    "volume50": "50%",
+    "volume100": "100%"
+  },
+
+  "display": {
+    "title": "Big Picture",
+    "loading": "Loading…"
+  },
+
+  "confirm": {
+    "deletePlayer": "Delete {{name}}?",
+    "deleteTable": "Delete {{name}}?"
+  },
+
   "common": {
     "yes": "Yes",
     "no": "No",

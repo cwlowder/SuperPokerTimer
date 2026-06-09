@@ -9,6 +9,7 @@ import {
   Volume2,
   VolumeOff,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useEventStream } from "../hooks/useEventStream";
 import { halfVolume, fullVolume } from "../hooks/useLocalSettings";
 import { useLocalSettingsCtx } from "../context/LocalSettingsContext";
@@ -20,6 +21,7 @@ export default function ConnectionStatus({
   size?: number;
   muted?: boolean;
 }) {
+  const { t } = useTranslation();
   const { connected, timerStatus } = useEventStream();
   const { settings, cycleVolume } = useLocalSettingsCtx();
 
@@ -34,43 +36,43 @@ export default function ConnectionStatus({
     ? "var(--color-success, #22c55e)"
     : "var(--color-danger, #ef4444)";
 
-  const wsLabel = connected ? "Connected" : "Disconnected";
+  const wsLabel = connected ? t("connection.connected") : t("connection.disconnected");
 
   // ---- Timer sync status ----
   let timerIcon = <ClockFading size={size} />;
   let timerColor = "#9ca3af";
-  let timerLabel = "Unknown";
+  let timerLabel = t("connection.unknown");
 
   if (timerStatus === "neutral" || !connected) {
     timerIcon = <ClockFading size={size} />;
     timerColor = "#eab308";
-    timerLabel = "Syncing";
+    timerLabel = t("connection.syncing");
   } else if (timerStatus === "excelent") {
     timerIcon = <ClockCheck size={size} />;
     timerColor = "#22c55e";
-    timerLabel = "Stable";
+    timerLabel = t("connection.stable");
   } else if (timerStatus === "good") {
     timerIcon = <Clock size={size} />;
     timerColor = "#22c55e";
-    timerLabel = "In Sync";
+    timerLabel = t("connection.inSync");
   } else if (timerStatus === "bad") {
     timerIcon = <ClockAlert size={size} />;
     timerColor = "#ef4444";
-    timerLabel = "Out of Sync";
+    timerLabel = t("connection.outOfSync");
   }
 
   let soundIcon = <VolumeOff size={size} />;
   let soundColor = "#ef4444";
-  let soundLabel = "Sound off";
+  let soundLabel = t("connection.soundOff");
 
   if (settings.volume === halfVolume) {
     soundIcon = <Volume1 size={size} />;
     soundColor = "#9ca3af";
-    soundLabel = "50%";
+    soundLabel = t("connection.volume50");
   } else if (settings.volume === fullVolume) {
     soundIcon = <Volume2 size={size} />;
     soundColor = "#9ca3af";
-    soundLabel = "100%";
+    soundLabel = t("connection.volume100");
   }
 
   // If muted, remove all color
