@@ -1,0 +1,16 @@
+services:
+  app:
+    image: ghcr.io/cwlowder/pokertourney-app:master
+    ports:
+      - "8000:8000"
+    volumes:
+      - pokertourney_data:/data
+      - ./sounds:/sounds
+    environment:
+      - DATABASE_PATH=/data/app.db
+      # Uncomment to use PostgreSQL instead:
+      # - DATABASE_DSN=postgresql://user:password@host/dbname
+      - SOUNDS_DIR=/sounds
+
+volumes:
+  pokertourney_data:

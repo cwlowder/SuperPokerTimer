@@ -2,8 +2,6 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, AsyncIterator
 
-from .ws_manager import ws_manager
-
 @dataclass
 class Event:
     type: str

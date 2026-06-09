@@ -175,10 +175,10 @@ class TimerService:
     async def _loop(self) -> None:
         while True:
             await asyncio.sleep(0.25)
-            settings = await get_settings(self.conn)
             now = now_ms()
 
             if self.running:
+                settings = await get_settings(self.conn)
                 # derive remaining from finish time
                 self.remaining_ms = max(0, self.finish_at_server_ms - now)
 

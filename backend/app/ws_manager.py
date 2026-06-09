@@ -1,7 +1,8 @@
 import asyncio
 from typing import Set, Dict, Any
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from .db import get_settings, get_state
+from .db import Database, get_settings, get_state
+from .events import EventBus
 from .utils import now_ms
 
 router = APIRouter()
@@ -42,7 +43,7 @@ ws_manager = WSManager()
 async def websocket_endpoint(ws: WebSocket):
     await ws_manager.connect(ws)
 
-    conn: aiosqlite.Connection = ws.app.state.db
+    conn: Database = ws.app.state.db
     event_bus: EventBus = ws.app.state.bus
 
     async def send_initial_state():

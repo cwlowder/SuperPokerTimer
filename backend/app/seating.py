@@ -1,24 +1,21 @@
 import random, time
 from typing import Any
-import aiosqlite
-from .db import add_announcement, get_settings
+from .db import Database, add_announcement, get_settings
 from .events import EventBus, Event
 
 def now_ms() -> int:
     return int(time.time() * 1000)
 
-async def list_active_players(conn: aiosqlite.Connection) -> list[dict[str, Any]]:
-    cur = await conn.execute("SELECT id, name FROM players WHERE eliminated=0 ORDER BY created_at_ms ASC")
-    rows = await cur.fetchall()
+async def list_active_players(conn: Database) -> list[dict[str, Any]]:
+    rows = await conn.fetchall("SELECT id, name FROM players WHERE eliminated=0 ORDER BY created_at_ms ASC")
     return [{"id": r["id"], "name": r["name"]} for r in rows]
 
-async def list_tables(conn: aiosqlite.Connection) -> list[dict[str, Any]]:
-    cur = await conn.execute("SELECT id, name, seats, enabled FROM tables ORDER BY created_at_ms ASC")
-    rows = await cur.fetchall()
+async def list_tables(conn: Database) -> list[dict[str, Any]]:
+    rows = await conn.fetchall("SELECT id, name, seats, enabled FROM tables ORDER BY created_at_ms ASC")
     return [{"id": r["id"], "name": r["name"], "seats": r["seats"], "enabled": bool(r["enabled"])} for r in rows]
 
-async def get_assignments(conn: aiosqlite.Connection) -> list[dict[str, Any]]:
-    cur = await conn.execute(
+async def get_assignments(conn: Database) -> list[dict[str, Any]]:
+    rows = await conn.fetchall(
         '''
         SELECT sa.table_id, sa.seat_num, sa.player_id, t.name AS table_name
         FROM seat_assignments sa
@@ -26,13 +23,10 @@ async def get_assignments(conn: aiosqlite.Connection) -> list[dict[str, Any]]:
         ORDER BY t.created_at_ms ASC, sa.seat_num ASC
         '''
     )
-    rows = await cur.fetchall()
     return [{"table_id": r["table_id"], "table_name": r["table_name"], "seat_num": r["seat_num"], "player_id": r["player_id"]} for r in rows]
 
-async def clear_eliminated_assignments(conn: aiosqlite.Connection) -> int:
-    # Assumes player table is "players" with column "eliminated" (0/1)
-    # and assignments table is "seat_assignments" with "player_id".
-    cur = await conn.execute("""
+async def clear_eliminated_assignments(conn: Database) -> int:
+    await conn.execute("""
         UPDATE seat_assignments
         SET player_id = NULL
         WHERE player_id IN (
@@ -40,11 +34,10 @@ async def clear_eliminated_assignments(conn: aiosqlite.Connection) -> int:
         )
     """)
     await conn.commit()
-    return cur.rowcount or 0
+    return 0
 
-async def _ensure_seats_for_table(conn: aiosqlite.Connection, table_id: str, seats: int) -> None:
-    cur = await conn.execute("SELECT COUNT(*) AS c FROM seat_assignments WHERE table_id=?", (table_id,))
-    row = await cur.fetchone()
+async def _ensure_seats_for_table(conn: Database, table_id: str, seats: int) -> None:
+    row = await conn.fetchone("SELECT COUNT(*) AS c FROM seat_assignments WHERE table_id=?", (table_id,))
     existing = int(row["c"])
     if existing < seats:
         for n in range(existing + 1, seats + 1):
@@ -56,17 +49,15 @@ async def _ensure_seats_for_table(conn: aiosqlite.Connection, table_id: str, sea
         await conn.execute("DELETE FROM seat_assignments WHERE table_id=? AND seat_num>?", (table_id, seats))
     await conn.commit()
 
-async def normalize_seats(conn: aiosqlite.Connection) -> None:
-    cur = await conn.execute("SELECT id, seats FROM tables")
-    rows = await cur.fetchall()
+async def normalize_seats(conn: Database) -> None:
+    rows = await conn.fetchall("SELECT id, seats FROM tables")
     for r in rows:
         await _ensure_seats_for_table(conn, r["id"], int(r["seats"]))
 
-async def clear_all_assignments(conn: aiosqlite.Connection) -> None:
+async def clear_all_assignments(conn: Database) -> None:
     await conn.execute("UPDATE seat_assignments SET player_id=NULL")
-    await conn.commit()
 
-async def randomize_seating(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]:
+async def randomize_seating(conn: Database, bus: EventBus) -> dict[str, Any]:
     await normalize_seats(conn)
     players = await list_active_players(conn)
     tables = [t for t in await list_tables(conn) if t["enabled"]]
@@ -131,7 +122,7 @@ async def randomize_seating(conn: aiosqlite.Connection, bus: EventBus) -> dict[s
     await bus.publish(Event("announcement", {"type": "randomize", "payload": payload, "created_at_ms": ts}))
     return payload
 
-async def rebalance(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]:
+async def rebalance(conn: Database, bus: EventBus) -> dict[str, Any]:
     await normalize_seats(conn)
 
     removed = await clear_eliminated_assignments(conn)
@@ -252,7 +243,7 @@ async def rebalance(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]
     await bus.publish(Event("announcement", {"type": "rebalance", "payload": payload, "created_at_ms": ts}))
     return payload
 
-async def deseat_seating(conn: aiosqlite.Connection, bus: EventBus) -> dict[str, Any]:
+async def deseat_seating(conn: Database, bus: EventBus) -> dict[str, Any]:
     # Capture previous assignments (for announcements)
     prev = await get_assignments(conn)
     prev_map = {
@@ -543,7 +534,7 @@ def end_fill_seat_order(total_seats: int, open_seats: list[int]) -> list[int]:
 
 
 async def apply_assignments_and_build_changes(
-    conn: aiosqlite.Connection,
+    conn: Database,
     final_assignments: dict[str, tuple[str, int]],
     prev_map: dict[str, tuple[str, int]],
     players_by_id: dict[str, dict[str, Any]],

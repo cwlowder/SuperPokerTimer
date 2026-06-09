@@ -3,7 +3,9 @@ import os
 
 class AppSettings(BaseModel):
     database_path: str = os.getenv("DATABASE_PATH", "./app.db")
+    database_dsn: str | None = os.getenv("DATABASE_DSN")
     sounds_dir: str = os.getenv("SOUNDS_DIR", "./sounds")
     cors_allow_origins: str = os.getenv("CORS_ALLOW_ORIGINS", "*")
+    static_dir: str | None = os.getenv("STATIC_DIR")
 
 settings = AppSettings()

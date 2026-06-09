@@ -2,9 +2,8 @@ import os, json, uuid
 from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
-import aiosqlite
 
-from .db import get_settings, set_settings, get_state, list_announcements
+from .db import Database, get_settings, set_settings, get_state, list_announcements
 from .events import EventBus
 from .timer import TimerService
 from .seating import randomize_seating, rebalance, deseat_seating, normalize_seats
@@ -22,19 +21,19 @@ async def health():
 
 @router.get("/state")
 async def read_state(request: Request):
-    conn: aiosqlite.Connection = request.app.state.db
-    settings = await get_settings(conn)
-    state = await get_state(conn)
+    db: Database = request.app.state.db
+    settings = await get_settings(db)
+    state = await get_state(db)
     return {"settings": settings, "state": state}
 
 @router.put("/settings")
 async def update_settings(request: Request, payload: dict[str, Any]):
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
     timer: TimerService = request.app.state.timer
     if "levels" not in payload or not isinstance(payload["levels"], list) or len(payload["levels"]) == 0:
         raise HTTPException(400, "settings.levels must be a non-empty list")
-    await set_settings(conn, payload)
-    await normalize_seats(conn)
+    await set_settings(db, payload)
+    await normalize_seats(db)
     # Apply changes immediately: if current level duration changed, clamp remaining to new total
     settings = payload
     levels = settings.get("levels", [])
@@ -94,7 +93,7 @@ async def list_sounds(request: Request):
 
 @router.get("/players")
 async def list_players(request: Request, q: Optional[str] = None, eliminated: Optional[bool] = None):
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
     sql = "SELECT id, name, eliminated FROM players"
     clauses = []
     params: list[Any] = []
@@ -107,24 +106,23 @@ async def list_players(request: Request, q: Optional[str] = None, eliminated: Op
     if clauses:
         sql += " WHERE " + " AND ".join(clauses)
     sql += " ORDER BY eliminated ASC, created_at_ms DESC"
-    cur = await conn.execute(sql, tuple(params))
-    rows = await cur.fetchall()
+    rows = await db.fetchall(sql, tuple(params))
     return [{"id": r["id"], "name": r["name"], "eliminated": bool(r["eliminated"])} for r in rows]
 
 @router.post("/players")
 async def create_player(request: Request, payload: dict):
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
     name = (payload.get("name") or "").strip()
     if not name:
         raise HTTPException(400, "name is required")
     pid = str(uuid.uuid4())
-    await conn.execute("INSERT INTO players (id, name, eliminated, created_at_ms) VALUES (?, ?, 0, ?)", (pid, name, now_ms()))
-    await conn.commit()
+    await db.execute("INSERT INTO players (id, name, eliminated, created_at_ms) VALUES (?, ?, 0, ?)", (pid, name, now_ms()))
+    await db.commit()
     return {"id": pid}
 
 @router.patch("/players/{player_id}")
 async def update_player(request: Request, player_id: str, payload: dict):
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
     fields = []
     params: list[Any] = []
     if "name" in payload and payload["name"] is not None:
@@ -136,28 +134,27 @@ async def update_player(request: Request, player_id: str, payload: dict):
     if not fields:
         return {"ok": True}
     params.append(player_id)
-    await conn.execute(f"UPDATE players SET {', '.join(fields)} WHERE id=?", tuple(params))
-    await conn.commit()
+    await db.execute(f"UPDATE players SET {', '.join(fields)} WHERE id=?", tuple(params))
+    await db.commit()
     return {"ok": True}
 
 @router.delete("/players/{player_id}")
 async def delete_player(request: Request, player_id: str):
-    conn: aiosqlite.Connection = request.app.state.db
-    await conn.execute("DELETE FROM players WHERE id=?", (player_id,))
-    await conn.execute("UPDATE seat_assignments SET player_id=NULL WHERE player_id=?", (player_id,))
-    await conn.commit()
+    db: Database = request.app.state.db
+    await db.execute("DELETE FROM players WHERE id=?", (player_id,))
+    await db.execute("UPDATE seat_assignments SET player_id=NULL WHERE player_id=?", (player_id,))
+    await db.commit()
     return {"ok": True}
 
 @router.get("/tables")
 async def list_tables_api(request: Request):
-    conn: aiosqlite.Connection = request.app.state.db
-    cur = await conn.execute("SELECT id, name, seats, enabled FROM tables ORDER BY created_at_ms ASC")
-    rows = await cur.fetchall()
+    db: Database = request.app.state.db
+    rows = await db.fetchall("SELECT id, name, seats, enabled FROM tables ORDER BY created_at_ms ASC")
     return [{"id": r["id"], "name": r["name"], "seats": r["seats"], "enabled": bool(r["enabled"])} for r in rows]
 
 @router.post("/tables")
 async def create_table(request: Request, payload: dict):
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
     name = (payload.get("name") or "").strip()
     seats = int(payload.get("seats") or 9)
     if not name:
@@ -165,15 +162,15 @@ async def create_table(request: Request, payload: dict):
     if seats < 2 or seats > 12:
         raise HTTPException(400, "seats must be 2..12")
     tid = str(uuid.uuid4())
-    await conn.execute("INSERT INTO tables (id, name, seats, enabled, created_at_ms) VALUES (?, ?, ?, 1, ?)", (tid, name, seats, now_ms()))
+    await db.execute("INSERT INTO tables (id, name, seats, enabled, created_at_ms) VALUES (?, ?, ?, 1, ?)", (tid, name, seats, now_ms()))
     for seat_num in range(1, seats + 1):
-        await conn.execute("INSERT OR IGNORE INTO seat_assignments (table_id, seat_num, player_id) VALUES (?, ?, NULL)", (tid, seat_num))
-    await conn.commit()
+        await db.execute("INSERT OR IGNORE INTO seat_assignments (table_id, seat_num, player_id) VALUES (?, ?, NULL)", (tid, seat_num))
+    await db.commit()
     return {"id": tid}
 
 @router.patch("/tables/{table_id}")
 async def update_table(request: Request, table_id: str, payload: dict):
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
     fields = []
     params: list[Any] = []
     if "name" in payload and payload["name"] is not None:
@@ -191,23 +188,23 @@ async def update_table(request: Request, table_id: str, payload: dict):
     if not fields:
         return {"ok": True}
     params.append(table_id)
-    await conn.execute(f"UPDATE tables SET {', '.join(fields)} WHERE id=?", tuple(params))
-    await conn.commit()
-    await normalize_seats(conn)
+    await db.execute(f"UPDATE tables SET {', '.join(fields)} WHERE id=?", tuple(params))
+    await db.commit()
+    await normalize_seats(db)
     return {"ok": True}
 
 @router.delete("/tables/{table_id}")
 async def delete_table(request: Request, table_id: str):
-    conn: aiosqlite.Connection = request.app.state.db
-    await conn.execute("DELETE FROM tables WHERE id=?", (table_id,))
-    await conn.execute("DELETE FROM seat_assignments WHERE table_id=?", (table_id,))
-    await conn.commit()
+    db: Database = request.app.state.db
+    await db.execute("DELETE FROM tables WHERE id=?", (table_id,))
+    await db.execute("DELETE FROM seat_assignments WHERE table_id=?", (table_id,))
+    await db.commit()
     return {"ok": True}
 
 @router.get("/seats")
 async def list_seats(request: Request):
-    conn: aiosqlite.Connection = request.app.state.db
-    cur = await conn.execute(
+    db: Database = request.app.state.db
+    rows = await db.fetchall(
         '''
         SELECT sa.table_id, sa.seat_num, sa.player_id, t.name AS table_name
         FROM seat_assignments sa
@@ -215,26 +212,25 @@ async def list_seats(request: Request):
         ORDER BY t.created_at_ms ASC, sa.seat_num ASC
         '''
     )
-    rows = await cur.fetchall()
     return [{"table_id": r["table_id"], "table_name": r["table_name"], "seat_num": r["seat_num"], "player_id": r["player_id"]} for r in rows]
 
 @router.post("/seating/randomize")
 async def seating_randomize(request: Request):
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
     bus: EventBus = request.app.state.bus
-    return await randomize_seating(conn, bus)
+    return await randomize_seating(db, bus)
 
 @router.post("/seating/rebalance")
 async def seating_rebalance(request: Request):
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
     bus: EventBus = request.app.state.bus
-    return await rebalance(conn, bus)
+    return await rebalance(db, bus)
 
 @router.post("/seating/deseat")
 async def deseat(request: Request):
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
     bus: EventBus = request.app.state.bus
-    return await deseat_seating(conn, bus)
+    return await deseat_seating(db, bus)
 
 @router.post("/seating/move")
 async def move_seat(request: Request, payload: dict[str, Any]):
@@ -247,7 +243,7 @@ async def move_seat(request: Request, payload: dict[str, Any]):
         "mode": "swap" | "move"   # optional; default swap
       }
     """
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
 
     player_id = payload.get("player_id")
     to_table_id = payload.get("to_table_id")
@@ -258,55 +254,52 @@ async def move_seat(request: Request, payload: dict[str, Any]):
         raise HTTPException(400, "player_id and to_table_id required")
 
     # destination seat exists?
-    cur = await conn.execute(
+    dest_row = await db.fetchone(
         "SELECT player_id FROM seat_assignments WHERE table_id=? AND seat_num=?",
         (to_table_id, to_seat_num),
     )
-    row = await cur.fetchone()
-    if row is None:
+    if dest_row is None:
         raise HTTPException(404, "Seat not found")
-    dest_player_id = row[0]
+    dest_player_id = dest_row["player_id"]
 
-    # find source seat (player must be seated somewhere, otherwise it's just a place)
-    cur = await conn.execute(
+    # find source seat
+    src = await db.fetchone(
         "SELECT table_id, seat_num FROM seat_assignments WHERE player_id=?",
         (player_id,),
     )
-    src = await cur.fetchone()
-    src_table_id, src_seat_num = (src[0], src[1]) if src else (None, None)
+    src_table_id = src["table_id"] if src else None
+    src_seat_num = src["seat_num"] if src else None
 
-    # If dropping onto same seat, noop
     if src_table_id == to_table_id and src_seat_num == to_seat_num:
         return {"ok": True, "mode": "noop"}
 
     if mode == "move":
-        # Move into dest, kicking out dest occupant (they become unseated)
-        await conn.execute(
+        await db.execute(
             "UPDATE seat_assignments SET player_id=NULL WHERE table_id=? AND seat_num=?",
             (to_table_id, to_seat_num),
         )
-        await conn.execute(
+        await db.execute(
             "UPDATE seat_assignments SET player_id=? WHERE table_id=? AND seat_num=?",
             (player_id, to_table_id, to_seat_num),
         )
         if src_table_id is not None:
-            await conn.execute(
+            await db.execute(
                 "UPDATE seat_assignments SET player_id=NULL WHERE table_id=? AND seat_num=?",
                 (src_table_id, src_seat_num),
             )
     else:
         # swap (default): swap with whoever is in dest (including empty)
         if src_table_id is not None:
-            await conn.execute(
+            await db.execute(
                 "UPDATE seat_assignments SET player_id=? WHERE table_id=? AND seat_num=?",
                 (dest_player_id, src_table_id, src_seat_num),
             )
-        await conn.execute(
+        await db.execute(
             "UPDATE seat_assignments SET player_id=? WHERE table_id=? AND seat_num=?",
             (player_id, to_table_id, to_seat_num),
         )
 
-    await conn.commit()
+    await db.commit()
     return {
         "ok": True,
         "mode": mode,
@@ -319,29 +312,27 @@ async def move_seat(request: Request, payload: dict[str, Any]):
 @router.post("/seating/unseat")
 async def unseat_player(request: Request, payload: dict[str, Any]):
     """Remove a single player from their current seat."""
-    conn: aiosqlite.Connection = request.app.state.db
+    db: Database = request.app.state.db
 
     player_id = payload.get("player_id")
     if not player_id:
         raise HTTPException(400, "player_id required")
 
-    cur = await conn.execute(
+    row = await db.fetchone(
         "SELECT table_id, seat_num FROM seat_assignments WHERE player_id=?",
         (player_id,),
     )
-    row = await cur.fetchone()
     if row is None:
         return {"ok": True, "mode": "noop", "from": {"table_id": None, "seat_num": None}}
 
-    table_id, seat_num = row[0], row[1]
-    await conn.execute(
+    await db.execute(
         "UPDATE seat_assignments SET player_id=NULL WHERE table_id=? AND seat_num=?",
-        (table_id, seat_num),
+        (row["table_id"], row["seat_num"]),
     )
-    await conn.commit()
-    return {"ok": True, "mode": "unseat", "from": {"table_id": table_id, "seat_num": seat_num}}
+    await db.commit()
+    return {"ok": True, "mode": "unseat", "from": {"table_id": row["table_id"], "seat_num": row["seat_num"]}}
 
 @router.get("/announcements")
 async def announcements(request: Request, limit: int = 50):
-    conn: aiosqlite.Connection = request.app.state.db
-    return {"items": await list_announcements(conn, limit=limit)}
+    db: Database = request.app.state.db
+    return {"items": await list_announcements(db, limit=limit)}
