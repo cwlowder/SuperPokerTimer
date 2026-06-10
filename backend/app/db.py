@@ -311,13 +311,18 @@ class PostgresDatabase(Database):
             return [dict(r) for r in rows]
 
     async def commit(self) -> None:
-        if self._tx is not None:
+        if self._tx is None:
+            return
+        try:
             await self._tx.commit()
-            self._tx = None
-            conn = self._conn
-            self._conn = None
-            await self._pool.release(conn)
-            self._write_lock.release()
+        except Exception:
+            await self._abort()
+            raise
+        self._tx = None
+        conn = self._conn
+        self._conn = None
+        await self._pool.release(conn)
+        self._write_lock.release()
 
     async def close(self) -> None:
         await self._abort()
