@@ -63,17 +63,17 @@ CREATE TABLE IF NOT EXISTS settings (
 CREATE TABLE IF NOT EXISTS tourney_state (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   current_level_index INTEGER NOT NULL,
-  remaining_ms INTEGER NOT NULL,
-  finish_at_server_ms INTEGER NOT NULL DEFAULT 0,
+  remaining_ms BIGINT NOT NULL,
+  finish_at_server_ms BIGINT NOT NULL DEFAULT 0,
   running INTEGER NOT NULL,
-  updated_at_ms INTEGER NOT NULL
+  updated_at_ms BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS players (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   eliminated INTEGER NOT NULL DEFAULT 0,
-  created_at_ms INTEGER NOT NULL
+  created_at_ms BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tables (
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS tables (
   name TEXT NOT NULL,
   seats INTEGER NOT NULL,
   enabled INTEGER NOT NULL DEFAULT 1,
-  created_at_ms INTEGER NOT NULL
+  created_at_ms BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS seat_assignments (
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS seat_assignments (
 
 CREATE TABLE IF NOT EXISTS announcements (
   id SERIAL PRIMARY KEY,
-  created_at_ms INTEGER NOT NULL,
+  created_at_ms BIGINT NOT NULL,
   type TEXT NOT NULL,
   payload_json TEXT NOT NULL
 );
