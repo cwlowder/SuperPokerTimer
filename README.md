@@ -12,6 +12,26 @@ A LAN-friendly web app for running a freezeout-style poker tournament. It includ
 - Seating tools: manual seat moves, randomize seating, rebalance tables, deseat everyone
 - Announcements for seating operations and timer events (shown in admin and display mode)
 
+## Screenshots
+
+### Admin panel — timer
+
+Timer controls, current/next blinds, jump to level, and a running feed of announcements.
+
+![Admin panel timer tab](docs/screenshots/admin-timer.png)
+
+### Admin panel — tables and seating
+
+Drag players between the unseated list and table seats, or use randomize / rebalance / deseat.
+
+![Admin panel tables tab](docs/screenshots/admin-tables.png)
+
+### Display mode — big picture
+
+Read-only view for a TV or projector at `/display`.
+
+![Display mode](docs/screenshots/display-big-picture.png)
+
 ## Quick start (Docker)
 
 ```bash
