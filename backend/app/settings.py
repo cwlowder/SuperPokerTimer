@@ -7,5 +7,6 @@ class AppSettings(BaseModel):
     sounds_dir: str = os.getenv("SOUNDS_DIR", "./sounds")
     cors_allow_origins: str = os.getenv("CORS_ALLOW_ORIGINS", "*")
     static_dir: str | None = os.getenv("STATIC_DIR")
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
 
 settings = AppSettings()

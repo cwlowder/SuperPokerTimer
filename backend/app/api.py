@@ -1,4 +1,4 @@
-import os, json, uuid
+import math, os, json, uuid
 from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -7,17 +7,40 @@ from .db import Database, get_settings, set_settings, get_state, list_announceme
 from .events import EventBus
 from .timer import TimerService
 from .seating import randomize_seating, rebalance, deseat_seating, normalize_seats
+from .timer import level_duration_ms
 from .utils import now_ms
 
 router = APIRouter()
+
+def _require_int(value: Any, field: str) -> int:
+    """Coerce a JSON-supplied value to int, as a 400 rather than an unhandled 500."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        raise HTTPException(400, f"{field} must be an integer")
 
 def sse_format(event: str, data: dict[str, Any]) -> str:
     payload = json.dumps(data, separators=(",", ":"))
     return f"event: {event}\ndata: {payload}\n\n"
 
 @router.get("/health")
-async def health():
-    return {"ok": True}
+async def health(request: Request):
+    timer: TimerService = request.app.state.timer
+    task = timer._task
+    return {
+        "ok": True,
+        "timer": {
+            # If loop_alive is false the timer is stalled: nothing will advance
+            # the level and clients will sit at 00:00.
+            "loop_alive": bool(task and not task.done()),
+            "running": timer.running,
+            "current_level_index": timer.current_level_index,
+            "last_persist_ms": timer._last_persist_ms,
+            "error_count": timer.error_count,
+            "last_error": timer.last_error,
+            "last_error_at_ms": timer.last_error_at_ms,
+        },
+    }
 
 @router.get("/state")
 async def read_state(request: Request):
@@ -32,19 +55,28 @@ async def update_settings(request: Request, payload: dict[str, Any]):
     timer: TimerService = request.app.state.timer
     if "levels" not in payload or not isinstance(payload["levels"], list) or len(payload["levels"]) == 0:
         raise HTTPException(400, "settings.levels must be a non-empty list")
+    for i, level in enumerate(payload["levels"]):
+        if not isinstance(level, dict):
+            raise HTTPException(400, f"settings.levels[{i}] must be an object")
+        try:
+            minutes = float(level.get("minutes"))
+        except (TypeError, ValueError):
+            raise HTTPException(400, f"settings.levels[{i}].minutes must be a number")
+        if not math.isfinite(minutes) or minutes < 0:
+            raise HTTPException(400, f"settings.levels[{i}].minutes must be >= 0")
     await set_settings(db, payload)
     await normalize_seats(db)
     # Apply changes immediately: if current level duration changed, clamp remaining to new total
     settings = payload
     levels = settings.get("levels", [])
-    try:
-        idx = int(timer.current_level_index)
-        if 0 <= idx < len(levels):
-            total_ms = int(levels[idx].get("minutes", 0)) * 60_000
-            if total_ms > 0:
-                timer.remaining_ms = min(int(timer.remaining_ms), total_ms)
-    except Exception:
-        pass
+    idx = int(timer.current_level_index)
+    if 0 <= idx < len(levels):
+        total_ms = level_duration_ms(levels[idx])
+        if total_ms > 0:
+            timer.remaining_ms = min(timer._current_remaining_ms(), total_ms)
+            # finish_at is the truth while running; remaining_ms alone is ignored
+            if timer.running:
+                timer.finish_at_server_ms = now_ms() + timer.remaining_ms
     await timer._persist()
     await timer._emit_full_state()
     return {"ok": True}
@@ -156,7 +188,7 @@ async def list_tables_api(request: Request):
 async def create_table(request: Request, payload: dict):
     db: Database = request.app.state.db
     name = (payload.get("name") or "").strip()
-    seats = int(payload.get("seats") or 9)
+    seats = _require_int(payload.get("seats") or 9, "seats")
     if not name:
         raise HTTPException(400, "name is required")
     if seats < 2 or seats > 12:
@@ -177,7 +209,7 @@ async def update_table(request: Request, table_id: str, payload: dict):
         fields.append("name=?")
         params.append(str(payload["name"]).strip())
     if "seats" in payload and payload["seats"] is not None:
-        s = int(payload["seats"])
+        s = _require_int(payload["seats"], "seats")
         if s < 2 or s > 12:
             raise HTTPException(400, "seats must be 2..12")
         fields.append("seats=?")
@@ -247,11 +279,11 @@ async def move_seat(request: Request, payload: dict[str, Any]):
 
     player_id = payload.get("player_id")
     to_table_id = payload.get("to_table_id")
-    to_seat_num = int(payload.get("to_seat_num"))
     mode = payload.get("mode") or "swap"
 
     if not player_id or not to_table_id:
         raise HTTPException(400, "player_id and to_table_id required")
+    to_seat_num = _require_int(payload.get("to_seat_num"), "to_seat_num")
 
     # destination seat exists?
     dest_row = await db.fetchone(

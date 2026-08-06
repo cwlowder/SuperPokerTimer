@@ -1,4 +1,4 @@
-# Poker Tourney Timer
+# Super Poker Timer
 
 A LAN-friendly web app for running a freezeout-style poker tournament. It includes a server-authoritative level timer, basic player tracking, and table seating tools.
 

@@ -1,6 +1,9 @@
 import asyncio
+import logging
 from dataclasses import dataclass
 from typing import Any, AsyncIterator
+
+log = logging.getLogger(__name__)
 
 @dataclass
 class Event:
@@ -19,8 +22,11 @@ class EventBus:
                 try:
                     q.put_nowait(event)
                 except asyncio.QueueFull:
-                    pass
+                    # A wedged subscriber silently misses events; that used to be
+                    # invisible and looks identical to "the server never sent it".
+                    log.warning("dropped %r event: subscriber queue full", event.type)
                 except Exception:
+                    log.exception("dropping subscriber after failed %r publish", event.type)
                     dead.append(q)
             for q in dead:
                 self._subscribers.discard(q)

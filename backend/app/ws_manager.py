@@ -1,9 +1,12 @@
 import asyncio
+import logging
 from typing import Set, Dict, Any
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from .db import Database, get_settings, get_state
 from .events import EventBus
 from .utils import now_ms
+
+log = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -16,10 +19,12 @@ class WSManager:
         await ws.accept()
         async with self._lock:
             self._clients.add(ws)
+            log.info("ws client connected (%d total)", len(self._clients))
 
     async def disconnect(self, ws: WebSocket) -> None:
         async with self._lock:
             self._clients.discard(ws)
+            log.info("ws client disconnected (%d remaining)", len(self._clients))
 
     async def broadcast(self, msg: Dict[str, Any]) -> None:
         async with self._lock:
@@ -29,7 +34,8 @@ class WSManager:
         for ws in clients:
             try:
                 await ws.send_json(msg)
-            except Exception:
+            except Exception as e:
+                log.warning("ws send failed, dropping client: %s: %s", type(e).__name__, e)
                 dead.append(ws)
 
         if dead:
@@ -102,5 +108,8 @@ async def websocket_endpoint(ws: WebSocket):
 
     except WebSocketDisconnect:
         pass
+    except Exception:
+        log.exception("ws connection failed")
+        raise
     finally:
         await ws_manager.disconnect(ws)
