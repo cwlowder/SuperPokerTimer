@@ -1,10 +1,13 @@
 import asyncio
+import logging
 import re
 import json
 import aiosqlite
 import asyncpg
 from abc import ABC, abstractmethod
 from typing import Any, Optional
+
+log = logging.getLogger(__name__)
 
 SQLITE_SCHEMA = r"""
 PRAGMA journal_mode=WAL;
@@ -100,6 +103,18 @@ CREATE TABLE IF NOT EXISTS announcements (
 );
 """
 
+# CREATE TABLE IF NOT EXISTS is a no-op against a database created before the
+# ms-timestamp columns were widened to BIGINT, leaving int4 columns that overflow
+# on any real epoch-ms value. These are idempotent and cheap on tables this size.
+POSTGRES_MIGRATIONS = [
+    "ALTER TABLE tourney_state ALTER COLUMN remaining_ms TYPE BIGINT",
+    "ALTER TABLE tourney_state ALTER COLUMN finish_at_server_ms TYPE BIGINT",
+    "ALTER TABLE tourney_state ALTER COLUMN updated_at_ms TYPE BIGINT",
+    "ALTER TABLE players ALTER COLUMN created_at_ms TYPE BIGINT",
+    "ALTER TABLE tables ALTER COLUMN created_at_ms TYPE BIGINT",
+    "ALTER TABLE announcements ALTER COLUMN created_at_ms TYPE BIGINT",
+]
+
 DEFAULT_SETTINGS = {
   "levels": [
     {"type": "regular", "minutes": 20, "small_blind_cents": 10, "big_blind_cents": 20, "ante_cents": 0},
@@ -184,6 +199,7 @@ class SqliteDatabase(Database):
         conn.row_factory = aiosqlite.Row
         await conn.executescript(SQLITE_SCHEMA)
         await conn.commit()
+        log.info("connected to sqlite at %s", path)
         db = cls(conn)
         await _ensure_defaults(db)
         return db
@@ -237,6 +253,9 @@ class PostgresDatabase(Database):
                     stmt = stmt.strip()
                     if stmt:
                         await conn.execute(stmt)
+                for stmt in POSTGRES_MIGRATIONS:
+                    await conn.execute(stmt)
+        log.info("connected to postgres (schema + %d migrations applied)", len(POSTGRES_MIGRATIONS))
         db = cls(pool)
         await _ensure_defaults(db)
         return db
@@ -249,13 +268,14 @@ class PostgresDatabase(Database):
                 self._tx = self._conn.transaction()
                 await self._tx.start()
             except Exception:
+                log.exception("failed to begin transaction")
                 conn = self._conn
                 self._conn = None
                 if conn is not None:
                     try:
                         await self._pool.release(conn)
                     except Exception:
-                        pass
+                        log.exception("failed to release connection after failed begin")
                 self._write_lock.release()
                 raise
 
@@ -269,32 +289,35 @@ class PostgresDatabase(Database):
             try:
                 await tx.rollback()
             except Exception:
-                pass
+                log.exception("transaction rollback failed")
         if conn is not None:
             try:
                 await self._pool.release(conn)
             except Exception:
-                pass
+                log.exception("connection release failed")
         if held_lock:
             self._write_lock.release()
 
     async def execute(self, sql: str, params: tuple = ()) -> None:
         if sql.strip().upper().startswith('PRAGMA'):
             return
+        pg_sql, pg_params = _to_pg(sql, params)
         await self._begin()
         try:
-            pg_sql, pg_params = _to_pg(sql, params)
             await self._conn.execute(pg_sql, *pg_params)
         except Exception:
+            # Log the statement, not the params: params carry player names.
+            log.exception("execute failed, rolling back: %s", pg_sql)
             await self._abort()
             raise
 
     async def execute_returning_id(self, sql: str, params: tuple = ()) -> int:
+        pg_sql, pg_params = _to_pg(sql + ' RETURNING id', params)
         await self._begin()
         try:
-            pg_sql, pg_params = _to_pg(sql + ' RETURNING id', params)
             return await self._conn.fetchval(pg_sql, *pg_params)
         except Exception:
+            log.exception("execute_returning_id failed, rolling back: %s", pg_sql)
             await self._abort()
             raise
 
@@ -316,6 +339,7 @@ class PostgresDatabase(Database):
         try:
             await self._tx.commit()
         except Exception:
+            log.exception("commit failed, rolling back")
             await self._abort()
             raise
         self._tx = None

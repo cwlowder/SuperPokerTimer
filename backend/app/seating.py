@@ -1,7 +1,9 @@
-import random, time
+import logging, random, time
 from typing import Any
 from .db import Database, add_announcement, get_settings
 from .events import EventBus, Event
+
+log = logging.getLogger(__name__)
 
 def now_ms() -> int:
     return int(time.time() * 1000)
@@ -326,7 +328,8 @@ def get_min_players_per_table(settings: dict[str, Any]) -> int:
     v = seating.get("min_players_per_table", 4)
     try:
         v = int(v)
-    except Exception:
+    except (TypeError, ValueError):
+        log.warning("invalid seating.min_players_per_table=%r; using 4", v)
         v = 4
     return max(1, v)
 
