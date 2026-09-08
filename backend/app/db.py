@@ -3,6 +3,7 @@ import logging
 import re
 import json
 import aiosqlite
+from .chips import DEFAULT_CHIP_SETTINGS
 import asyncpg
 from abc import ABC, abstractmethod
 from typing import Any, Optional
@@ -134,7 +135,8 @@ DEFAULT_SETTINGS = {
   ],
   "sounds": {"transition": None, "half": None, "thirty": None, "five": None, "end": None},
   "seating": {"min_players_per_table": 4},
-  "currency": {"symbol": "$", "denomination": "cents"}
+  "currency": {"symbol": "$", "denomination": "cents"},
+  "chips": DEFAULT_CHIP_SETTINGS
 }
 
 DEFAULT_STATE = {

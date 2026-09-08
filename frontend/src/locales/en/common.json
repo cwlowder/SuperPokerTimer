@@ -10,6 +10,7 @@
       "levels": "Levels",
       "players": "Players",
       "tables": "Tables",
+      "chips": "Chips",
       "settings": "Settings"
     }
   },
@@ -124,10 +125,8 @@
     "seatsCount_one": "{{count}} seat",
     "seatsCount_other": "{{count}} seats",
     "seatNumber": "seat {{num}}",
-  
     "pendingTitle": "Pending Tables",
     "pendingEmpty": "No tables queued yet.",
-
     "actions": {
       "add": "Add Table(s)",
       "addToList": "Add to List",
@@ -243,5 +242,85 @@
     "level": "Level",
     "ante": "Ante",
     "blinds": "Blinds"
+  },
+
+  "chips": {
+    "save": "Save chip setup",
+    "unsaved": "Unsaved changes — the plan below previews them.",
+    "recalculating": "Recalculating…",
+    "noLevels": "Add blind levels first — the plan uses them to size the chips.",
+    "tourney": {
+      "sectionTitle": "Tournament",
+      "helpText": "Chips are planned for the worst case: every player using all of their rebuys.",
+      "players": "Players",
+      "overridePlayers": "Override",
+      "fromTourney": "Using the {{n}} players registered in this tourney.",
+      "maxRebuys": "Max rebuys per player",
+      "maxRebuysHelp": "On top of the initial buy-in. 0 means no rebuys.",
+      "startingStack": "Starting stack",
+      "rebuyStack": "Rebuy stack",
+      "colorUps": "Colour up during breaks"
+    },
+    "inventory": {
+      "sectionTitle": "Your chips",
+      "helpText": "The chips you actually own. Click a chip to change its colour.",
+      "color": "Colour",
+      "denomination": "Value",
+      "owned": "Owned",
+      "used": "Used",
+      "remaining": "Spare",
+      "empty": "No chips yet — add one to get started.",
+      "addChip": "Add chip",
+      "removeChip": "Remove this chip",
+      "changeColor": "Change colour",
+      "pickColor": "Pick a colour",
+      "colorTaken": "{{color}} is already used by another chip",
+      "allColorsUsed": "All ten colours are in use."
+    },
+    "plan": {
+      "startingTitle": "Buy-in stack",
+      "startingSubtitle": "What each of the {{n}} players gets when they buy in.",
+      "rebuyTitle": "Rebuy stack",
+      "rebuySubtitle": "Up to {{n}} per player.",
+      "rebuysDisabled": "Set “max rebuys per player” above 0 to plan rebuy stacks.",
+      "perBuyIn": "Hand to each player",
+      "perRebuy": "Hand over on each rebuy",
+      "totalBuyIns": "Count out of the box for all {{n}} buy-ins",
+      "totalRebuys": "Count out of the box for all {{n}} rebuys",
+      "stackValue": "Stack value",
+      "chipsPerStack": "Chips per stack",
+      "stacksNeeded": "Stacks needed",
+      "chipsTotal": "Chips in total"
+    },
+    "colorUps": {
+      "sectionTitle": "Colour ups",
+      "helpText": "Run these at the breaks to keep stacks small. Odd chips are raced off as usual.",
+      "none": "No colour up needed — the blinds never outgrow your smallest chip.",
+      "atBreak": "Break after level {{level}}",
+      "exchange": "Trade {{ratio}} × {{from}} for 1 × {{into}}",
+      "endsWith": "Finishes on: {{denoms}}",
+      "reserve": "keep ~{{n}} spare"
+    },
+    "errors": {
+      "no_chips": "Enable at least one chip colour with a value and a quantity.",
+      "no_players": "Add players to the tourney, or override the player count.",
+      "no_starting_stack": "Set a starting stack.",
+      "insufficient_value": "Not enough chips: this tourney needs more total value than you own.",
+      "insufficient_supply": "Not enough chips to build every stack. Add more chips or lower the stack size.",
+      "starting_stack_unmakeable": "This stack can't be made exactly from the chip values you enabled.",
+      "rebuy_stack_unmakeable": "The rebuy stack can't be made exactly from the chip values you enabled.",
+      "oversubscribed": "More chips are needed than you own."
+    },
+    "warnings": {
+      "no_chip_divides_blinds": "No chip value divides your opening blinds — players won't be able to post them exactly.",
+      "single_denomination": "Only one chip value fits this stack, so players get no mix. Enable a larger chip.",
+      "levels_not_payable": "Blinds at level {{levels}} can't be paid exactly with the chips in play by then.",
+      "supply_limited": "Short on {{color}} chips — the mix was compromised to fit what you own.",
+      "no_spare_chips": "Every {{color}} chip is committed, leaving no spares.",
+      "rebuy_stack_unmakeable": "The rebuy stack can't be built from the chips left after the starting stacks.",
+      "color_up_short": "Only {{spare}} spare {{color}} chips, but this colour up needs about {{needed}}.",
+      "duplicate_denomination": "Two chips are both worth the same amount; the {{color}} one is ignored.",
+      "supply_forced_large_chip": "Short on small chips, so the stack includes a chip worth more than we would normally deal."
+    }
   }
 }

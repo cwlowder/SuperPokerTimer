@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import TimerCard from "../components/TimerCard";
 import SoundPlayer from "../components/SoundPlayer";
 import { apiDelete, apiPatch, apiPost, apiPut } from "../utils/api";
-import { Announcement, Denomination, Player, Seat, Level, Table } from "../types";
+import { Announcement, ChipSettings, Denomination, Player, Seat, Level, Table } from "../types";
 import { useEventStream } from "../hooks/useEventStream";
 import { useTourneyData } from "../hooks/useTourneyData";
 import { AdminHeader, AdminTabs, Tab } from "../components/admin/common";
@@ -12,6 +12,7 @@ import { PlayersTab } from "../components/admin/playersTab";
 import { TablesTab } from "../components/admin/tablesTab";
 import { SettingsTab } from "../components/admin/settingsTab";
 import { LevelsTab } from "../components/admin/levelsTab";
+import { ChipsTab } from "../components/admin/chipsTab";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("timer");
@@ -191,6 +192,12 @@ export default function AdminPage() {
     await reload();
   };
 
+  const saveChips = async (chips: ChipSettings) => {
+    if (!settings) return;
+    await apiPut("/api/settings", { ...settings, chips });
+    await reload();
+  };
+
   const soundToPlayNow = lastSound ?? soundPreview;
 
   return (
@@ -266,6 +273,15 @@ export default function AdminPage() {
           onMoveSeat={moveSeat}
           onUnseatPlayer={unseatPlayer}
           seatFlash={seatFlash}
+        />
+      ) : null}
+
+      {tab === "chips" ? (
+        <ChipsTab
+          settings={settings}
+          onSave={saveChips}
+          currencySymbol={currencySymbol}
+          denomination={denomination}
         />
       ) : null}
 

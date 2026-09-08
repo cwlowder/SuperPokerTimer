@@ -1,9 +1,9 @@
 import ConnectionStatus from "../ConnectionStatus";
-import { Timer, UsersRound, Settings, ListOrdered } from "lucide-react";
+import { Timer, UsersRound, Settings, ListOrdered, Coins } from "lucide-react";
 import PokerTable from "../icons/PokerTable";
 import { useTranslation } from "react-i18next";
 
-export type Tab = "timer" | "levels" | "players" | "tables" | "settings";
+export type Tab = "timer" | "levels" | "players" | "tables" | "chips" | "settings";
 
 export function TabButton({
   active,
@@ -63,6 +63,9 @@ export function AdminTabs({
       </TabButton>
       <TabButton active={tab === "tables"} onClick={() => setTab("tables")} title={t("admin.tabs.tables")}>
         <PokerTable size={size} />
+      </TabButton>
+      <TabButton active={tab === "chips"} onClick={() => setTab("chips")} title={t("admin.tabs.chips")}>
+        <Coins size={size} />
       </TabButton>
       <TabButton active={tab === "settings"} onClick={() => setTab("settings")} title={t("admin.tabs.settings")}>
         <Settings size={size} />

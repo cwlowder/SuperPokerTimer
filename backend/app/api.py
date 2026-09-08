@@ -7,6 +7,7 @@ from .db import Database, get_settings, set_settings, get_state, list_announceme
 from .events import EventBus
 from .timer import TimerService
 from .seating import randomize_seating, rebalance, deseat_seating, normalize_seats
+from .chips import CHIP_COLORS, DEFAULT_CHIP_SETTINGS, plan_chips
 from .timer import level_duration_ms
 from .utils import now_ms
 
@@ -363,6 +364,46 @@ async def unseat_player(request: Request, payload: dict[str, Any]):
     )
     await db.commit()
     return {"ok": True, "mode": "unseat", "from": {"table_id": row["table_id"], "seat_num": row["seat_num"]}}
+
+@router.get("/chips/colors")
+async def chip_colors():
+    """The selectable chip colors and the default chip configuration."""
+    return {"colors": CHIP_COLORS, "defaults": DEFAULT_CHIP_SETTINGS}
+
+
+@router.post("/chips/plan")
+async def chips_plan(request: Request, payload: Optional[dict[str, Any]] = None):
+    """Compute a chip distribution.
+
+    The body is the chip config so the tab can preview unsaved edits; omit it to
+    plan from whatever is currently saved in settings.
+    """
+    db: Database = request.app.state.db
+    settings = await get_settings(db)
+    cfg = payload if isinstance(payload, dict) else (settings.get("chips") or DEFAULT_CHIP_SETTINGS)
+
+    row = await db.fetchone("SELECT COUNT(*) AS c FROM players")
+    registered = int(row["c"]) if row else 0
+
+    override = cfg.get("players_override")
+    players = registered if override in (None, "", 0) else _require_int(override, "players_override")
+
+    chips = cfg.get("chips")
+    if not isinstance(chips, list):
+        raise HTTPException(400, "chips must be a list")
+
+    plan = plan_chips(
+        chips=chips,
+        players=players,
+        max_rebuys=_require_int(cfg.get("max_rebuys") or 0, "max_rebuys"),
+        starting_stack_cents=_require_int(cfg.get("starting_stack_cents") or 0, "starting_stack_cents"),
+        rebuy_stack_cents=_require_int(cfg.get("rebuy_stack_cents") or 0, "rebuy_stack_cents"),
+        levels=settings.get("levels") or [],
+        color_ups=bool(cfg.get("color_ups", True)),
+    )
+    plan["registered_players"] = registered
+    return plan
+
 
 @router.get("/announcements")
 async def announcements(request: Request, limit: int = 50):
