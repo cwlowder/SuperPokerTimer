@@ -41,12 +41,18 @@ DEFAULT_CHIP_SETTINGS: dict[str, Any] = {
     "chips": DEFAULT_CHIPS,
 }
 
-IDEAL_STACK_CHIPS = 24
+# Any stack in this range is a comfortable handful, so chip count alone should not
+# decide between them -- let tidiness and the mix do that. Penalising every chip
+# away from a single ideal quietly trades away change-making for a smaller pile.
+COMFORTABLE_STACK_CHIPS = (20, 34)
 MAX_STACK_CHIPS = 60
 # More than this many of one colour is a nuisance to count out and to stack.
 MAX_PER_DENOM = 12
 # Every denomination dealt should be worth carrying: at least this share of the stack.
 MIN_VALUE_SHARE = 0.05
+# If the biggest chip carries most of the stack, players must break it to make any
+# ordinary bet -- exactly the fiddling this is meant to avoid.
+MAX_TOP_SHARE = 0.5
 SEARCH_BUDGET = 200_000
 # A stack never sensibly holds more than this many of one non-base denomination.
 # This bounds the branching factor; unlike a hand-picked list of "nice" counts it
@@ -142,7 +148,12 @@ def score_stack(counts: list[int], denoms: list[int], big_blind: int) -> float:
     """Lower is better. Encodes the 'easy for humans at a real table' goals."""
     total = sum(counts)
     stack = sum(c * d for c, d in zip(counts, denoms))
-    cost = abs(total - IDEAL_STACK_CHIPS) * 1.2
+    low, high = COMFORTABLE_STACK_CHIPS
+    cost = 0.0
+    if total < low:
+        cost += (low - total) * 1.2
+    elif total > high:
+        cost += (total - high) * 1.2
     if total > MAX_STACK_CHIPS:
         cost += (total - MAX_STACK_CHIPS) * 5.0
 
@@ -169,8 +180,8 @@ def score_stack(counts: list[int], denoms: list[int], big_blind: int) -> float:
             if 0 < share < MIN_VALUE_SHARE:
                 cost += (MIN_VALUE_SHARE - share) * 60.0
         top_share = counts[-1] * denoms[-1] / stack
-        if top_share > 0.6:
-            cost += (top_share - 0.6) * 40.0
+        if top_share > MAX_TOP_SHARE:
+            cost += (top_share - MAX_TOP_SHARE) * 40.0
 
     if big_blind > 0:
         # Enough small change to post blinds for a few orbits without breaking a

@@ -350,3 +350,27 @@ def test_solver_returns_the_best_scoring_stack_it_can_reach() -> None:
                 alt = [rest // 10, b, c, a]
                 if alt[0] <= 99:
                     assert score_stack(alt, denoms, 20) >= best - 1e-9, alt
+
+
+def test_chip_count_does_not_decide_between_comfortable_stacks() -> None:
+    """A 31-chip stack is as reasonable as a 27-chip one.
+
+    Scoring every chip away from a single ideal quietly trades change-making for
+    a smaller pile, which is the wrong trade at a real table.
+    """
+    denoms = [10, 50, 100, 250]
+    fewer = [10, 5, 4, 5]    # 24 chips
+    more = [10, 10, 9, 2]    # 31 chips, same value, tidier counts
+    assert sum(c * d for c, d in zip(fewer, denoms)) == 2000
+    assert sum(c * d for c, d in zip(more, denoms)) == 2000
+    # The rounder mix must not lose purely for carrying seven more chips.
+    assert score_stack(more, denoms, 20) < score_stack(fewer, denoms, 20)
+
+
+def test_the_largest_chip_does_not_carry_most_of_the_stack() -> None:
+    denoms = [10, 50, 100, 250]
+    counts = solve_stack(denoms, [99] * 4, 2000, 20)
+    assert counts is not None
+    stack = sum(c * d for c, d in zip(counts, denoms))
+    top_share = counts[-1] * denoms[-1] / stack
+    assert top_share <= 0.5 + 1e-9, f"{counts} puts {top_share:.0%} in the top chip"
