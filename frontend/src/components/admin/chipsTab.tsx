@@ -4,7 +4,7 @@ import { Plus, X } from "lucide-react";
 
 import MoneyDisplay from "../MoneyDisplay";
 import { apiGet, apiPost } from "../../utils/api";
-import { ChipColor, ChipPlan, ChipSettings, ChipSpec, ChipStackPlan, Denomination, Settings } from "../../types";
+import { ChipColor, ChipPlan, ChipSettings, ChipShape, ChipSpec, ChipStackPlan, Denomination, Settings } from "../../types";
 
 const FALLBACK_SETTINGS: ChipSettings = {
   enabled: true,
@@ -16,32 +16,68 @@ const FALLBACK_SETTINGS: ChipSettings = {
   chips: []
 };
 
-/** A poker chip: colored disc with the dashed edge stripes of a dice-edge set. */
+/**
+ * A token in the tourney's own colours.
+ *
+ * `chip` is a dice-edge disc; `plaque` is the rectangular European style, drawn on
+ * the diagonal so the two are never mistaken for one another at a glance.
+ */
 export function ChipSwatch({
   color,
   size = 26,
-  struck = false
+  struck = false,
+  shape = "chip"
 }: {
   color?: ChipColor;
   size?: number;
   struck?: boolean;
+  shape?: ChipShape;
 }) {
+  const face = color?.hex ?? "#888";
+  const rim = color?.edge ?? "#FFFFFF";
+  const weight = Math.max(2, Math.round(size * 0.12));
+  const outline = "0 0 0 1px rgba(255,255,255,0.3)";
+
   return (
     <span
       title={color?.label}
-      style={{ position: "relative", display: "inline-flex", flex: "0 0 auto", width: size, height: size }}
+      style={{
+        position: "relative",
+        display: "inline-flex",
+        flex: "0 0 auto",
+        alignItems: "center",
+        justifyContent: "center",
+        width: size,
+        height: size
+      }}
     >
-      <span
-        style={{
-          width: "100%",
-          height: "100%",
-          borderRadius: "50%",
-          background: color?.hex ?? "#888",
-          border: `${Math.max(2, Math.round(size * 0.12))}px dashed rgba(0,0,0,0.4)`,
-          boxShadow: "0 0 0 1px rgba(255,255,255,0.3)",
-          opacity: struck ? 0.55 : 1
-        }}
-      />
+      {shape === "plaque" ? (
+        <span
+          style={{
+            // Sized so the rotated corners still fit inside the same box as a disc.
+            width: size * 0.86,
+            height: size * 0.56,
+            borderRadius: Math.max(2, Math.round(size * 0.1)),
+            background: face,
+            border: `${weight}px dashed ${rim}`,
+            boxShadow: outline,
+            transform: "rotate(45deg)",
+            opacity: struck ? 0.55 : 1
+          }}
+        />
+      ) : (
+        <span
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: "50%",
+            background: face,
+            border: `${weight}px dashed ${rim}`,
+            boxShadow: outline,
+            opacity: struck ? 0.55 : 1
+          }}
+        />
+      )}
       {struck ? (
         <svg
           viewBox="0 0 24 24"
@@ -62,15 +98,11 @@ export function ChipSwatch({
 function ChipCountPill({
   color,
   count,
-  denomCents,
-  currencySymbol,
-  denomination
+  shape
 }: {
   color?: ChipColor;
   count: number;
-  denomCents: number;
-  currencySymbol: string;
-  denomination: Denomination;
+  shape?: ChipShape;
 }) {
   return (
     <div
@@ -83,10 +115,9 @@ function ChipCountPill({
         borderRadius: 999
       }}
     >
-      <ChipSwatch color={color} />
+      <ChipSwatch color={color} shape={shape} />
       <span style={{ fontSize: 20, fontWeight: 800 }}>{count}</span>
-      <span className="muted" style={{ fontSize: 13 }}>×</span>
-      <MoneyDisplay cents={denomCents} size={16} currencySymbol={currencySymbol} denomination={denomination} />
+      <span>{color?.label ?? ""}</span>
     </div>
   );
 }
@@ -125,9 +156,7 @@ function StackCard({
             key={c.color}
             color={colorsById[c.color]}
             count={c.count}
-            denomCents={c.denom_cents}
-            currencySymbol={currencySymbol}
-            denomination={denomination}
+            shape={c.shape}
           />
         ))}
       </div>
@@ -141,9 +170,7 @@ function StackCard({
             key={c.color}
             color={colorsById[c.color]}
             count={c.total}
-            denomCents={c.denom_cents}
-            currencySymbol={currencySymbol}
-            denomination={denomination}
+            shape={c.shape}
           />
         ))}
       </div>
@@ -172,21 +199,53 @@ function StackCard({
 }
 
 function Notices({ plan, colorsById }: { plan: ChipPlan; colorsById: Record<string, ChipColor> }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const items: { tone: "error" | "warn"; text: string }[] = [];
-  const label = (id?: string) => (id ? colorsById[id]?.label ?? id : "");
 
-  for (const e of plan.errors) {
-    items.push({ tone: "error", text: t(`chips.errors.${e.code}`, { ...e, color: label(e.color), defaultValue: e.code }) });
-  }
-  for (const w of plan.warnings) {
-    if (w.code === "levels_not_payable") {
-      const levels = (w.levels ?? []).map((l: any) => l.level_index + 1).join(", ");
-      items.push({ tone: "warn", text: t("chips.warnings.levels_not_payable", { levels }) });
-    } else {
-      items.push({ tone: "warn", text: t(`chips.warnings.${w.code}`, { ...w, color: label(w.color), defaultValue: w.code }) });
+  const label = (id?: string) => (id ? colorsById[id]?.label ?? id : "");
+  // A colour can now name two tokens, so say which one unless it is a plain disc.
+  const tokenLabel = (id?: string, shape?: string) =>
+    shape === "plaque" ? `${label(id)} ${t("chips.inventory.shape_plaque").toLowerCase()}` : label(id);
+  // "white, red and blue" rather than three separate notices.
+  const listFormat = new Intl.ListFormat(i18n.language || "en", { style: "long", type: "conjunction" });
+  const colorList = (ids?: string[], shapes?: string[]) =>
+    listFormat.format((ids ?? []).map((id, i) => tokenLabel(id, shapes?.[i])));
+
+  const render = (notice: any, tone: "error" | "warn") => {
+    if (notice.code === "levels_not_payable") {
+      const levels = (notice.levels ?? []).map((l: any) => l.level_index + 1).join(", ");
+      return { tone, text: String(t("chips.warnings.levels_not_payable", { levels })) };
     }
-  }
+    if (notice.code === "color_up_blocked") {
+      const items = notice.items ?? [];
+      const breaks = items.map((it: any) => it.after_level_index).join(", ");
+      const levels = Array.from(
+        new Set(items.flatMap((it: any) => it.blocking_level_indexes ?? []))
+      )
+        .map((i: any) => i + 1)
+        .join(", ");
+      return { tone, text: String(t("chips.warnings.color_up_blocked", { breaks, levels })) };
+    }
+    const colors = notice.colors
+      ? colorList(notice.colors, notice.shapes)
+      : tokenLabel(notice.color, notice.shape);
+    const count = notice.colors ? notice.colors.length : notice.color ? 1 : 0;
+    return {
+      tone,
+      text: String(
+        t(`chips.${tone === "error" ? "errors" : "warnings"}.${notice.code}`, {
+          ...notice,
+          colors,
+          color: colors,
+          n: count,
+          defaultValue: notice.code
+        })
+      )
+    };
+  };
+
+  for (const e of plan.errors) items.push(render(e, "error"));
+  for (const w of plan.warnings) items.push(render(w, "warn"));
   if (!items.length) return null;
 
   return (
@@ -226,7 +285,7 @@ export function ChipsTab({
   const [plan, setPlan] = useState<ChipPlan | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
   const [planning, setPlanning] = useState(false);
-  const [picking, setPicking] = useState<string | null>(null);
+  const [picking, setPicking] = useState<number | null>(null);
   const seq = useRef(0);
 
   const saved = settings?.chips ?? null;
@@ -275,12 +334,27 @@ export function ChipsTab({
   }, [draft]);
 
   const colorsById = useMemo(() => Object.fromEntries(colors.map((c) => [c.id, c])), [colors]);
+  // Sorted for display, but each row remembers where it lives in the draft --
+  // colour is no longer a unique handle now that a colour can be both shapes.
   const sortedChips = useMemo(
-    () => [...(draft?.chips ?? [])].sort((a, b) => a.denom_cents - b.denom_cents),
+    () =>
+      (draft?.chips ?? [])
+        .map((chip, index) => ({ chip, index }))
+        .sort((a, b) => a.chip.denom_cents - b.chip.denom_cents),
     [draft]
   );
-  const usedColors = useMemo(() => new Set((draft?.chips ?? []).map((c) => c.color)), [draft]);
-  const freeColors = useMemo(() => colors.filter((c) => !usedColors.has(c.id)), [colors, usedColors]);
+  const takenByShape = useMemo(() => {
+    const out: Record<ChipShape, Set<string>> = { chip: new Set(), plaque: new Set() };
+    for (const c of draft?.chips ?? []) out[c.shape ?? "chip"].add(c.color);
+    return out;
+  }, [draft]);
+  const freeSlots = useMemo(
+    () =>
+      (["chip", "plaque"] as ChipShape[]).flatMap((shape) =>
+        colors.filter((c) => !takenByShape[shape].has(c.id)).map((c) => ({ color: c.id, shape }))
+      ),
+    [colors, takenByShape]
+  );
 
   const update = (patch: Partial<ChipSettings>) => {
     setDirty(true);
@@ -288,38 +362,43 @@ export function ChipsTab({
   };
 
   const addChip = () => {
-    if (!freeColors.length) return;
-    const pick = freeColors[Math.floor(Math.random() * freeColors.length)];
+    if (!freeSlots.length) return;
+    // Prefer a plain disc; only reach for a plaque colour when discs are exhausted.
+    const discs = freeSlots.filter((slot) => slot.shape === "chip");
+    const pool = discs.length ? discs : freeSlots;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
     const largest = (draft?.chips ?? []).reduce((m, c) => Math.max(m, c.denom_cents), 0);
     setDirty(true);
     setPicking(null);
     setDraft((prev) =>
       prev
-        ? { ...prev, chips: [...prev.chips, { color: pick.id, denom_cents: largest ? largest * 5 : 10, qty: 100 }] }
+        ? {
+            ...prev,
+            chips: [
+              ...prev.chips,
+              { color: pick.color, shape: pick.shape, denom_cents: largest ? largest * 5 : 10, qty: 100 }
+            ]
+          }
         : prev
     );
   };
 
-  const removeChip = (color: string) => {
+  const removeChip = (index: number) => {
     setDirty(true);
-    setPicking((cur) => (cur === color ? null : cur));
-    setDraft((prev) => (prev ? { ...prev, chips: prev.chips.filter((c) => c.color !== color) } : prev));
-  };
-
-  const recolorChip = (from: string, to: string) => {
     setPicking(null);
-    if (from === to) return;
+    setDraft((prev) => (prev ? { ...prev, chips: prev.chips.filter((_, i) => i !== index) } : prev));
+  };
+
+  const updateChip = (index: number, patch: Partial<ChipSpec>) => {
     setDirty(true);
     setDraft((prev) =>
-      prev ? { ...prev, chips: prev.chips.map((c) => (c.color === from ? { ...c, color: to } : c)) } : prev
+      prev ? { ...prev, chips: prev.chips.map((c, i) => (i === index ? { ...c, ...patch } : c)) } : prev
     );
   };
 
-  const updateChip = (color: string, patch: Partial<ChipSpec>) => {
-    setDirty(true);
-    setDraft((prev) =>
-      prev ? { ...prev, chips: prev.chips.map((c) => (c.color === color ? { ...c, ...patch } : c)) } : prev
-    );
+  const recolorChip = (index: number, to: string) => {
+    setPicking(null);
+    updateChip(index, { color: to });
   };
 
   if (!draft) {
@@ -436,17 +515,21 @@ export function ChipsTab({
                 <th>{t("chips.inventory.denomination")}</th>
                 <th>{t("chips.inventory.owned")}</th>
                 <th>{t("chips.inventory.used")}</th>
+                <th>{t("chips.inventory.reserved")}</th>
                 <th>{t("chips.inventory.remaining")}</th>
                 <th style={{ width: 40 }} />
               </tr>
             </thead>
             <tbody>
-              {sortedChips.map((chip) => {
+              {sortedChips.map(({ chip, index }) => {
+                const shape: ChipShape = chip.shape ?? "chip";
                 const color = colorsById[chip.color];
-                const row = plan?.inventory?.find((r) => r.color === chip.color);
-                const open = picking === chip.color;
+                const row = plan?.inventory?.find(
+                  (r) => r.color === chip.color && (r.shape ?? "chip") === shape
+                );
+                const open = picking === index;
                 return (
-                  <React.Fragment key={chip.color}>
+                  <React.Fragment key={index}>
                     <tr>
                       <td>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -455,11 +538,16 @@ export function ChipsTab({
                             title={t("chips.inventory.changeColor")}
                             aria-expanded={open}
                             style={{ padding: 4, lineHeight: 0, borderRadius: "50%" }}
-                            onClick={() => setPicking(open ? null : chip.color)}
+                            onClick={() => setPicking(open ? null : index)}
                           >
-                            <ChipSwatch color={color} />
+                            <ChipSwatch color={color} shape={shape} />
                           </button>
-                          <span>{color?.label ?? chip.color}</span>
+                          <span>
+                            {color?.label ?? chip.color}
+                            {shape === "plaque" ? (
+                              <span className="muted"> {t("chips.inventory.shape_plaque").toLowerCase()}</span>
+                            ) : null}
+                          </span>
                         </div>
                       </td>
                       <td>
@@ -469,7 +557,7 @@ export function ChipsTab({
                           size={15}
                           currencySymbol={currencySymbol}
                           denomination={denomination}
-                          onChange={(cents) => updateChip(chip.color, { denom_cents: cents })}
+                          onChange={(cents) => updateChip(index, { denom_cents: cents })}
                         />
                       </td>
                       <td>
@@ -480,10 +568,11 @@ export function ChipsTab({
                           step={1}
                           style={{ width: 90 }}
                           value={chip.qty}
-                          onChange={(e) => updateChip(chip.color, { qty: Math.max(0, Number(e.target.value)) })}
+                          onChange={(e) => updateChip(index, { qty: Math.max(0, Number(e.target.value)) })}
                         />
                       </td>
                       <td>{row ? row.used : "\u2014"}</td>
+                      <td>{row ? row.reserved : "\u2014"}</td>
                       <td style={{ color: row && row.remaining <= 0 ? "rgba(255,140,160,1)" : undefined }}>
                         {row ? row.remaining : "\u2014"}
                       </td>
@@ -492,7 +581,7 @@ export function ChipsTab({
                           className="btn danger"
                           title={t("chips.inventory.removeChip")}
                           style={{ padding: "4px 8px", lineHeight: 0 }}
-                          onClick={() => removeChip(chip.color)}
+                          onClick={() => removeChip(index)}
                         >
                           <X size={16} />
                         </button>
@@ -500,13 +589,14 @@ export function ChipsTab({
                     </tr>
                     {open ? (
                       <tr>
-                        <td colSpan={6} style={{ paddingTop: 0 }}>
+                        <td colSpan={7} style={{ paddingTop: 0 }}>
                           <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>
                             {t("chips.inventory.pickColor")}
                           </div>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                             {colors.map((c) => {
-                              const taken = c.id !== chip.color && usedColors.has(c.id);
+                              // Only a clash within the same shape matters now.
+                              const taken = c.id !== chip.color && takenByShape[shape].has(c.id);
                               return (
                                 <button
                                   key={c.id}
@@ -519,12 +609,35 @@ export function ChipsTab({
                                     borderRadius: "50%",
                                     cursor: taken ? "not-allowed" : "pointer"
                                   }}
-                                  onClick={() => recolorChip(chip.color, c.id)}
+                                  onClick={() => recolorChip(index, c.id)}
                                 >
-                                  <ChipSwatch color={c} size={30} struck={taken} />
+                                  <ChipSwatch color={c} size={30} struck={taken} shape={shape} />
                                 </button>
                               );
                             })}
+                          </div>
+
+                          <div className="muted" style={{ fontSize: 13, margin: "12px 0 6px" }}>
+                            {t("chips.inventory.shape")}
+                          </div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            {(["chip", "plaque"] as const).map((option) => (
+                              <button
+                                key={option}
+                                className={"btn" + (shape === option ? " primary" : "")}
+                                disabled={option !== shape && takenByShape[option].has(chip.color)}
+                                title={
+                                  option !== shape && takenByShape[option].has(chip.color)
+                                    ? t("chips.inventory.shapeTaken", { color: color?.label ?? chip.color })
+                                    : undefined
+                                }
+                                style={{ display: "flex", alignItems: "center", gap: 8 }}
+                                onClick={() => updateChip(index, { shape: option })}
+                              >
+                                <ChipSwatch color={color} size={22} shape={option} />
+                                {t(`chips.inventory.shape_${option}`)}
+                              </button>
+                            ))}
                           </div>
                         </td>
                       </tr>
@@ -537,11 +650,11 @@ export function ChipsTab({
         )}
 
         <div style={{ marginTop: 10 }}>
-          <button className="btn" disabled={freeColors.length === 0} onClick={addChip}>
+          <button className="btn" disabled={freeSlots.length === 0} onClick={addChip}>
             <Plus size={16} style={{ verticalAlign: "-3px", marginRight: 4 }} />
             {t("chips.inventory.addChip")}
           </button>
-          {freeColors.length === 0 ? (
+          {freeSlots.length === 0 ? (
             <span className="muted" style={{ marginLeft: 8 }}>{t("chips.inventory.allColorsUsed")}</span>
           ) : null}
         </div>
@@ -587,7 +700,7 @@ export function ChipsTab({
               title={t("chips.plan.rebuyTitle")}
               subtitle={t("chips.plan.rebuySubtitle", { n: plan.max_rebuys })}
               stack={plan.rebuy}
-              perStackLabel={t("chips.plan.perRebuy")}
+                perStackLabel={t("chips.plan.perRebuy")}
               totalLabel={t("chips.plan.totalRebuys", { n: plan.rebuy.stacks })}
               colorsById={colorsById}
               currencySymbol={currencySymbol}
@@ -611,29 +724,73 @@ export function ChipsTab({
                 <div style={{ display: "grid", gap: 10 }}>
                   {plan.color_ups.map((step, i) => {
                     const from = plan.inventory.find((r) => r.denom_cents === step.retire_denom_cents);
-                    const into = plan.inventory.find((r) => r.denom_cents === step.into_denom_cents);
+                    const fromLabel = colorsById[from?.color ?? ""]?.label ?? "";
                     return (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                        <span className="badge">
-                          {t("chips.colorUps.atBreak", { level: step.after_level_index + 1 })}
-                        </span>
-                        <ChipSwatch color={colorsById[from?.color ?? ""]} />
-                        <span>
-                          {t("chips.colorUps.exchange", {
-                            ratio: step.ratio,
-                            from: colorsById[from?.color ?? ""]?.label ?? "",
-                            into: colorsById[into?.color ?? ""]?.label ?? ""
-                          })}
-                        </span>
-                        <ChipSwatch color={colorsById[into?.color ?? ""]} />
-                        {step.reserve_needed > 0 ? (
-                          <span className="muted" style={{ fontSize: 13 }}>
-                            ({t("chips.colorUps.reserve", { n: step.reserve_needed })})
+                      <div key={i} style={{ display: "grid", gap: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                          <span className="badge">
+                            {t("chips.colorUps.atBreak", { level: step.after_level_index + 1 })}
                           </span>
-                        ) : null}
+                          <span>{t("chips.colorUps.retire", { color: fromLabel })}</span>
+                          {step.forced ? (
+                            <span className="badge" style={{ borderColor: "rgba(242,194,48,0.7)" }}>
+                              {t("chips.colorUps.rounds", {
+                                levels: (step.rounding_level_indexes ?? []).map((n) => n + 1).join(", ")
+                              })}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* Just the recipes: how many of the old chip make one of the new. */}
+                        <div style={{ display: "grid", gap: 4, paddingLeft: 8 }}>
+                          {step.exchanges.map((exchange) => {
+                            const into = plan.inventory.find(
+                              (r) => r.denom_cents === exchange.into_denom_cents
+                            );
+                            return (
+                              <div
+                                key={exchange.into_denom_cents}
+                                style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}
+                              >
+                                <span style={{ fontSize: 18, fontWeight: 800 }}>{exchange.ratio}</span>
+                                <ChipSwatch color={colorsById[from?.color ?? ""]} shape={from?.shape} size={22} />
+                                <span>{fromLabel}</span>
+                                <span className="muted" style={{ margin: "0 4px" }}>=</span>
+                                <span style={{ fontSize: 18, fontWeight: 800 }}>1</span>
+                                <ChipSwatch color={colorsById[into?.color ?? ""]} shape={into?.shape} size={22} />
+                                <span>{colorsById[into?.color ?? ""]?.label ?? ""}</span>
+                                <span className="muted" style={{ fontSize: 13 }}>
+                                  {t("chips.colorUps.onHand", {
+                                    n: exchange.count,
+                                    color: colorsById[into?.color ?? ""]?.label ?? ""
+                                  })}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}
+                  {plan.reserve.length ? (
+                    <>
+                      <hr />
+                      <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
+                        {t("chips.colorUps.reserveTitle")}
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                        {plan.reserve.map((r) => (
+                          <ChipCountPill
+                            key={`${r.color}-${r.shape}-${r.denom_cents}`}
+                            color={colorsById[r.color]}
+                            count={r.count}
+                            shape={r.shape}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+
                   <div className="muted">
                     {t("chips.colorUps.endsWith", {
                       denoms: plan.denoms_in_play_at_end

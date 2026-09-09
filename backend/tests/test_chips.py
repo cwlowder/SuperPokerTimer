@@ -84,16 +84,19 @@ def test_solve_stack_prefers_round_counts() -> None:
 
 
 def test_color_ups_always_exchange_at_a_whole_ratio() -> None:
-    schedule, _ = plan_color_ups(LEVELS, [10, 25, 50])
+    schedule, _, _ = plan_color_ups(LEVELS, [10, 25, 50])
     assert schedule
     for step in schedule:
-        into, retire = step["into_denom_cents"], step["retire_denom_cents"]
-        assert into % retire == 0
-        assert step["ratio"] == into // retire
+        retire = step["retire_denom_cents"]
+        assert step["exchanges"]
+        for exchange in step["exchanges"]:
+            into = exchange["into_denom_cents"]
+            assert into % retire == 0
+            assert exchange["ratio"] == into // retire
 
 
 def test_color_ups_only_retire_chips_the_blinds_have_outgrown() -> None:
-    schedule, remaining = plan_color_ups(LEVELS, [10, 25, 50])
+    schedule, remaining, _ = plan_color_ups(LEVELS, [10, 25, 50])
     for step in schedule:
         assert step["retire_denom_cents"] not in remaining
     assert remaining[0] > 10
@@ -101,7 +104,7 @@ def test_color_ups_only_retire_chips_the_blinds_have_outgrown() -> None:
 
 def test_color_ups_are_skipped_when_blinds_stay_small() -> None:
     flat = [level(10, 20), BREAK, level(10, 20), BREAK, level(20, 40)]
-    schedule, remaining = plan_color_ups(flat, [10, 25, 50])
+    schedule, remaining, _ = plan_color_ups(flat, [10, 25, 50])
     assert schedule == []
     assert remaining == [10, 25, 50]
 
@@ -218,7 +221,7 @@ def test_every_plan_result_has_the_same_shape() -> None:
     """Failure paths must not omit keys the frontend types as always present."""
     shape = {
         "ok", "errors", "warnings", "players", "max_rebuys",
-        "starting", "rebuy", "inventory", "color_ups", "denoms_in_play_at_end",
+        "starting", "rebuy", "inventory", "reserve", "color_ups", "denoms_in_play_at_end",
     }
     cases = [
         dict(chips=DEFAULT_CHIPS, players=9, max_rebuys=0, starting_stack_cents=500, rebuy_stack_cents=500),
@@ -274,12 +277,12 @@ def test_stack_totals_agree_with_inventory_usage() -> None:
 
 def test_color_ups_can_target_a_chip_that_was_not_in_the_starting_stack() -> None:
     # 10c and 25c start in play; the 50c chip is only available, never dealt.
-    schedule, remaining = plan_color_ups(LEVELS, [10, 25], available=[10, 25, 50, 500])
+    schedule, remaining, _ = plan_color_ups(LEVELS, [10, 25], available=[10, 25, 50, 500])
     assert schedule, "expected the 10c chip to be retired"
     first = schedule[0]
     assert first["retire_denom_cents"] == 10
-    assert first["into_denom_cents"] == 50
-    assert first["ratio"] == 5
+    assert [e["into_denom_cents"] for e in first["exchanges"]] == [50]
+    assert first["exchanges"][0]["ratio"] == 5
     assert 50 in remaining
 
 
@@ -290,9 +293,8 @@ def test_color_ups_report_the_reserve_they_consume() -> None:
     )
     assert plan["ok"], plan["errors"]
     for step in plan["color_ups"]:
+        assert step["reserve_needed"] == sum(e["count"] for e in step["exchanges"])
         assert step["reserve_needed"] >= 0
-        # Trading N chips at R:1 needs about N/R of the larger chip.
-        assert step["reserve_needed"] <= max(1, step["ratio"]) * 10_000
 
 
 def test_two_colors_with_the_same_value_are_reported_not_double_counted() -> None:
@@ -374,3 +376,395 @@ def test_the_largest_chip_does_not_carry_most_of_the_stack() -> None:
     stack = sum(c * d for c, d in zip(counts, denoms))
     top_share = counts[-1] * denoms[-1] / stack
     assert top_share <= 0.5 + 1e-9, f"{counts} puts {top_share:.0%} in the top chip"
+
+
+def test_per_color_warnings_are_grouped_into_one_notice() -> None:
+    from app.chips import group_notices
+
+    grouped = group_notices([
+        {"code": "no_spare_chips", "color": "white", "denom_cents": 10},
+        {"code": "no_spare_chips", "color": "red", "denom_cents": 50},
+        {"code": "supply_limited", "color": "white", "denom_cents": 10},
+        {"code": "no_spare_chips", "color": "blue", "denom_cents": 100},
+        {"code": "single_denomination", "denom_cents": 50},
+    ])
+    assert [g["code"] for g in grouped] == ["no_spare_chips", "supply_limited", "single_denomination"]
+    assert grouped[0]["colors"] == ["white", "red", "blue"]
+    assert grouped[0]["denoms_cents"] == [10, 50, 100]
+    assert grouped[1]["colors"] == ["white"]
+    # Notices that are not per-colour pass through untouched.
+    assert grouped[2] == {"code": "single_denomination", "denom_cents": 50}
+
+
+def test_grouping_does_not_repeat_a_color() -> None:
+    from app.chips import group_notices
+
+    grouped = group_notices([
+        {"code": "supply_limited", "color": "green", "denom_cents": 250},
+        {"code": "supply_limited", "color": "green", "denom_cents": 250},
+    ])
+    assert len(grouped) == 1
+    assert grouped[0]["colors"] == ["green"]
+
+
+def test_a_real_plan_reports_each_warning_code_once() -> None:
+    chips = [
+        {"color": "white", "denom_cents": 10, "qty": 150},
+        {"color": "red", "denom_cents": 50, "qty": 150},
+        {"color": "blue", "denom_cents": 100, "qty": 135},
+        {"color": "green", "denom_cents": 250, "qty": 50},
+    ]
+    plan = plan_chips(
+        chips=chips, players=15, max_rebuys=0,
+        starting_stack_cents=2000, rebuy_stack_cents=2000, levels=LEVELS, color_ups=True,
+    )
+    codes = [w["code"] for w in plan["warnings"]]
+    assert len(codes) == len(set(codes)), codes
+
+
+def test_every_palette_colour_is_fully_specified() -> None:
+    from app.chips import CHIP_COLORS
+
+    seen = set()
+    for colour in CHIP_COLORS:
+        assert {"id", "label", "hex", "ink", "edge"} <= set(colour), colour
+        assert colour["id"] not in seen, f"duplicate colour {colour['id']}"
+        seen.add(colour["id"])
+        for key in ("hex", "ink", "edge"):
+            assert colour[key].startswith("#"), colour
+
+
+def _lab(hex_colour: str) -> tuple[float, float, float]:
+    """sRGB hex to CIELAB, so colour checks are perceptual rather than by eye."""
+    import math
+
+    r, g, b = (int(hex_colour[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    to_linear = lambda c: c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = to_linear(r), to_linear(g), to_linear(b)
+    x = r * 0.4124 + g * 0.3576 + b * 0.1805
+    y = r * 0.2126 + g * 0.7152 + b * 0.0722
+    z = r * 0.0193 + g * 0.1192 + b * 0.9505
+    f = lambda t: t ** (1 / 3) if t > 0.008856 else 7.787 * t + 16 / 116
+    fx, fy, fz = f(x / 0.95047), f(y), f(z / 1.08883)
+    return (116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz))
+
+
+def _delta_e(a: str, b: str) -> float:
+    import math
+
+    return math.dist(_lab(a), _lab(b))
+
+
+def test_every_chip_rim_is_visible_against_its_face() -> None:
+    """A white rim on a pale chip disappears; the white chip is why `edge` exists."""
+    from app.chips import CHIP_COLORS
+
+    for colour in CHIP_COLORS:
+        separation = _delta_e(colour["hex"], colour["edge"])
+        assert separation >= 25, f"{colour['label']} rim is only dE {separation:.1f} from its face"
+
+
+def test_chip_colours_are_distinguishable_from_each_other() -> None:
+    from app.chips import CHIP_COLORS
+
+    for i, a in enumerate(CHIP_COLORS):
+        for b in CHIP_COLORS[i + 1:]:
+            separation = _delta_e(a["hex"], b["hex"])
+            assert separation >= 20, f"{a['label']} and {b['label']} are only dE {separation:.1f} apart"
+
+
+def test_a_break_that_cannot_colour_up_says_why() -> None:
+    """Silently skipping a break looks like the feature is broken."""
+    awkward = [
+        level(50, 100), level(100, 200), BREAK,
+        level(300, 600),
+        level(350, 700),   # not a multiple of 100, so the 50c chip is still needed
+        level(2000, 4000),
+    ]
+    # The 50c chip is outgrown at a 300 small blind but not yet useless, so a level
+    # that still needs it wins and the colour up is skipped.
+    schedule, remaining, blocked = plan_color_ups(awkward, [50, 100, 250], [50, 100, 250, 500])
+    assert schedule == []
+    assert len(blocked) == 1
+    step = blocked[0]
+    assert step["retire_denom_cents"] == 50
+    assert step["needs_denom_cents"] == 100
+    assert step["blocking_level_indexes"] == [4]
+    assert remaining == [50, 100, 250]
+
+
+def test_multiple_breaks_produce_multiple_colour_ups() -> None:
+    tidy = [
+        level(10, 20), level(50, 100), BREAK,
+        level(100, 200), level(400, 800), BREAK,
+        level(1000, 2000), level(2000, 4000),
+    ]
+    schedule, remaining, blocked = plan_color_ups(tidy, [10, 50, 100, 250], [10, 50, 100, 250, 500])
+    assert len(schedule) >= 2, schedule
+    assert [s["retire_denom_cents"] for s in schedule] == sorted(s["retire_denom_cents"] for s in schedule)
+    assert blocked == []
+
+
+def test_a_blocked_colour_up_surfaces_as_a_plan_warning() -> None:
+    chips = [
+        {"color": "white", "denom_cents": 10, "qty": 400},
+        {"color": "red", "denom_cents": 50, "qty": 400},
+        {"color": "blue", "denom_cents": 100, "qty": 400},
+        {"color": "green", "denom_cents": 250, "qty": 400},
+    ]
+    # The second break wants to retire the 50c chip, which is outgrown at a 300
+    # small blind but not yet useless, and level 9 still needs it.
+    awkward = [
+        level(10, 20), level(20, 40), level(50, 100), BREAK,
+        level(100, 200), level(150, 300), BREAK,
+        level(300, 600), level(350, 700), level(2000, 4000),
+    ]
+    plan = plan_chips(
+        chips=chips, players=8, max_rebuys=0,
+        starting_stack_cents=2000, rebuy_stack_cents=2000, levels=awkward, color_ups=True,
+    )
+    assert "color_up_blocked" in {w["code"] for w in plan["warnings"]}
+
+
+def test_a_useless_chip_is_retired_even_if_a_level_then_needs_rounding() -> None:
+    """Carrying dead chips all night is worse than rounding one blind level."""
+    awkward = [
+        level(50, 100), level(100, 200), BREAK,
+        level(700, 1400),    # 50c is now 1/14 of the small blind: useless
+        level(1250, 2500),   # not a multiple of 100
+        level(2000, 4000),
+    ]
+    schedule, remaining, blocked = plan_color_ups(awkward, [50, 100, 250], [50, 100, 250, 500])
+    assert blocked == []
+    assert len(schedule) == 1
+    step = schedule[0]
+    assert step["retire_denom_cents"] == 50
+    assert step["forced"] is True
+    assert step["rounding_level_indexes"] == [4]
+    assert 50 not in remaining
+
+
+def test_an_outgrown_but_useful_chip_is_kept() -> None:
+    # Same shape, but the blinds have not run far enough ahead of the chip.
+    awkward = [
+        level(50, 100), level(100, 200), BREAK,
+        level(300, 600),
+        level(350, 700),
+        level(2000, 4000),
+    ]
+    schedule, remaining, blocked = plan_color_ups(awkward, [50, 100, 250], [50, 100, 250, 500])
+    assert schedule == []
+    assert blocked and 50 in remaining
+
+
+def test_shape_changes_identity_but_never_the_maths() -> None:
+    """A plaque is a different token from a disc, but it counts the same."""
+    plain = [
+        {"color": "white", "denom_cents": 10, "qty": 400},
+        {"color": "red", "denom_cents": 50, "qty": 400},
+        {"color": "blue", "denom_cents": 100, "qty": 400},
+        {"color": "green", "denom_cents": 250, "qty": 400},
+    ]
+    decorated = [dict(c, shape="plaque") for c in plain]
+    args = dict(
+        players=8, max_rebuys=0, starting_stack_cents=2000,
+        rebuy_stack_cents=2000, levels=LEVELS, color_ups=True,
+    )
+    a, b = plan_chips(chips=plain, **args), plan_chips(chips=decorated, **args)
+    numbers = lambda plan: [(c["denom_cents"], c["count"], c["total"]) for c in plan["starting"]["chips"]]
+    assert numbers(a) == numbers(b)
+    assert [r["shape"] for r in a["inventory"]] == ["chip"] * 4
+    assert [r["shape"] for r in b["inventory"]] == ["plaque"] * 4
+
+
+def test_one_colour_can_be_both_a_disc_and_a_plaque() -> None:
+    """Colour is only unique per shape, so these are two separate tokens."""
+    chips = [
+        {"color": "white", "denom_cents": 10, "qty": 400, "shape": "chip"},
+        {"color": "red", "denom_cents": 50, "qty": 400, "shape": "chip"},
+        {"color": "blue", "denom_cents": 100, "qty": 400, "shape": "chip"},
+        {"color": "white", "denom_cents": 250, "qty": 400, "shape": "plaque"},
+    ]
+    plan = plan_chips(
+        chips=chips, players=8, max_rebuys=0, starting_stack_cents=2000,
+        rebuy_stack_cents=2000, levels=LEVELS, color_ups=True,
+    )
+    assert plan["ok"], plan["errors"]
+    # Both whites survive as distinct inventory rows rather than colliding.
+    whites = [r for r in plan["inventory"] if r["color"] == "white"]
+    assert len(whites) == 2
+    assert {r["shape"] for r in whites} == {"chip", "plaque"}
+    assert {r["denom_cents"] for r in whites} == {10, 250}
+    # And their usage is tracked separately.
+    by_denom = {r["denom_cents"]: r for r in whites}
+    assert by_denom[10]["used"] != by_denom[250]["used"]
+    for row in plan["inventory"]:
+        assert row["used"] <= row["owned"]
+
+
+def test_colour_up_steps_up_a_denomination_when_the_first_choice_runs_out() -> None:
+    """Ten blues into a purple beats five blues into a black that ran out."""
+    levels = [
+        level(10, 20), level(50, 100), BREAK,
+        level(500, 1000), level(2000, 4000),
+    ]
+    issued = {100: 400}
+    # Only 3 blacks spare, but plenty of purples.
+    plentiful = plan_color_ups(
+        levels, [100, 500, 1000], [100, 500, 1000],
+        issued=issued, spare={500: 500, 1000: 500},
+    )[0]
+    assert [e["into_denom_cents"] for e in plentiful[0]["exchanges"]] == [500], "prefer the nearest chip"
+    assert plentiful[0]["shortfall"] == 0
+
+    scarce = plan_color_ups(
+        levels, [100, 500, 1000], [100, 500, 1000],
+        issued=issued, spare={500: 3, 1000: 500},
+    )[0]
+    step = scarce[0]
+    used = {e["into_denom_cents"]: e["count"] for e in step["exchanges"]}
+    # Takes the three blacks that exist, then covers the rest with purples.
+    assert used[500] == 3
+    assert used[1000] >= 38
+    assert step["shortfall"] == 0
+    absorbed = sum(e["count"] * e["ratio"] for e in step["exchanges"])
+    assert absorbed >= 400, "every retired chip must be accounted for"
+
+
+def test_colour_up_falls_back_to_the_largest_chip_when_nothing_covers_it() -> None:
+    levels = [
+        level(10, 20), level(50, 100), BREAK,
+        level(500, 1000), level(2000, 4000),
+    ]
+    schedule = plan_color_ups(
+        levels, [100, 500, 1000], [100, 500, 1000],
+        issued={100: 400}, spare={500: 1, 1000: 1},
+    )[0]
+    step = schedule[0]
+    # It uses everything in the box and still cannot absorb them all.
+    assert {e["into_denom_cents"] for e in step["exchanges"]} == {500, 1000}
+    assert step["shortfall"] > 0
+
+
+def test_a_short_colour_up_is_reported_against_the_chip_actually_chosen() -> None:
+    chips = [
+        {"color": "white", "denom_cents": 10, "qty": 900},
+        {"color": "red", "denom_cents": 50, "qty": 900},
+        {"color": "blue", "denom_cents": 100, "qty": 900},
+        {"color": "green", "denom_cents": 250, "qty": 900},
+        {"color": "black", "denom_cents": 500, "qty": 1},
+        {"color": "purple", "denom_cents": 1000, "qty": 1},
+    ]
+    plan = plan_chips(
+        chips=chips, players=20, max_rebuys=0, starting_stack_cents=2000,
+        rebuy_stack_cents=2000, levels=LEVELS, color_ups=True,
+    )
+    for warning in plan["warnings"]:
+        if warning["code"] == "color_up_short":
+            retired = {s["retire_denom_cents"] for s in plan["color_ups"]}
+            assert set(warning["denoms_cents"]) <= retired
+
+
+def test_a_colour_up_can_mix_denominations() -> None:
+    """Trade blues for blacks and purples together when neither covers it alone."""
+    levels = [
+        level(10, 20), level(50, 100), BREAK,
+        level(500, 1000), level(2000, 4000),
+    ]
+    schedule, _, _ = plan_color_ups(
+        levels, [100, 500, 1000], [100, 500, 1000],
+        issued={100: 400}, spare={500: 20, 1000: 100},
+    )
+    step = schedule[0]
+    used = {e["into_denom_cents"]: e["count"] for e in step["exchanges"]}
+    assert set(used) == {500, 1000}, "expected both chips to be used"
+    assert used[500] == 20, "should exhaust the nearest chip first"
+    assert step["shortfall"] == 0
+    absorbed = sum(e["count"] * e["ratio"] for e in step["exchanges"])
+    assert absorbed >= 400
+
+
+def test_an_exchange_never_promises_chips_that_are_not_in_the_box() -> None:
+    levels = [
+        level(10, 20), level(50, 100), BREAK,
+        level(500, 1000), level(2000, 4000),
+    ]
+    spare = {500: 7, 1000: 9}
+    schedule, _, _ = plan_color_ups(
+        levels, [100, 500, 1000], [100, 500, 1000], issued={100: 400}, spare=spare,
+    )
+    for exchange in schedule[0]["exchanges"]:
+        assert exchange["count"] <= spare[exchange["into_denom_cents"]]
+
+
+def test_allocation_prefers_the_nearest_chip_it_can_fill() -> None:
+    from app.chips import allocate_exchange
+
+    exchanges, shortfall = allocate_exchange(100, 100, [500, 1000], {500: 1000, 1000: 1000})
+    assert exchanges == [{"into_denom_cents": 500, "ratio": 5, "count": 20}]
+    assert shortfall == 0
+
+
+def test_allocation_rounds_a_part_stack_up_rather_than_leaving_it() -> None:
+    from app.chips import allocate_exchange
+
+    # 7 chips at 5:1 is one full black plus two left over.
+    exchanges, shortfall = allocate_exchange(7, 100, [500], {500: 1000})
+    assert sum(e["count"] for e in exchanges) == 2
+    assert shortfall == 0
+
+
+def test_reserve_totals_match_the_recipes() -> None:
+    """What the card tells you to hold back must equal what the swaps consume."""
+    chips = [
+        {"color": "white", "denom_cents": 10, "qty": 900},
+        {"color": "red", "denom_cents": 50, "qty": 900},
+        {"color": "blue", "denom_cents": 100, "qty": 900},
+        {"color": "green", "denom_cents": 250, "qty": 900},
+        {"color": "black", "denom_cents": 500, "qty": 200},
+        {"color": "purple", "denom_cents": 1000, "qty": 400},
+    ]
+    plan = plan_chips(
+        chips=chips, players=20, max_rebuys=0, starting_stack_cents=2000,
+        rebuy_stack_cents=2000, levels=LEVELS, color_ups=True,
+    )
+    assert plan["ok"], plan["errors"]
+    from_recipes: dict[int, int] = {}
+    for step in plan["color_ups"]:
+        for exchange in step["exchanges"]:
+            d = exchange["into_denom_cents"]
+            from_recipes[d] = from_recipes.get(d, 0) + exchange["count"]
+    assert {r["denom_cents"]: r["count"] for r in plan["reserve"]} == from_recipes
+    by_denom = {r["denom_cents"]: r for r in plan["inventory"]}
+    for denom, count in from_recipes.items():
+        assert by_denom[denom]["reserved"] == count
+
+
+def test_reserved_chips_are_never_double_promised() -> None:
+    """A chip held back for a swap is not also spare for something else."""
+    chips = [
+        {"color": "white", "denom_cents": 10, "qty": 900},
+        {"color": "red", "denom_cents": 50, "qty": 900},
+        {"color": "blue", "denom_cents": 100, "qty": 900},
+        {"color": "green", "denom_cents": 250, "qty": 900},
+        {"color": "black", "denom_cents": 500, "qty": 60},
+        {"color": "purple", "denom_cents": 1000, "qty": 60},
+    ]
+    plan = plan_chips(
+        chips=chips, players=20, max_rebuys=0, starting_stack_cents=2000,
+        rebuy_stack_cents=2000, levels=LEVELS, color_ups=True,
+    )
+    assert plan["ok"], plan["errors"]
+    for row in plan["inventory"]:
+        assert row["used"] + row["reserved"] <= row["owned"], row
+        assert row["remaining"] == row["owned"] - row["used"] - row["reserved"]
+        assert row["remaining"] >= 0, row
+
+
+def test_no_colour_ups_means_no_reserve() -> None:
+    plan = plan_chips(
+        chips=[dict(c, qty=900) for c in DEFAULT_CHIPS], players=8, max_rebuys=0,
+        starting_stack_cents=2000, rebuy_stack_cents=2000, levels=LEVELS, color_ups=False,
+    )
+    assert plan["reserve"] == []
+    assert all(r["reserved"] == 0 for r in plan["inventory"])

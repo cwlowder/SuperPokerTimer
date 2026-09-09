@@ -263,7 +263,7 @@
     },
     "inventory": {
       "sectionTitle": "Your chips",
-      "helpText": "The chips you actually own. Click a chip to change its colour.",
+      "helpText": "The chips you actually own. Click a chip to change its colour or shape.",
       "color": "Colour",
       "denomination": "Value",
       "owned": "Owned",
@@ -274,8 +274,13 @@
       "removeChip": "Remove this chip",
       "changeColor": "Change colour",
       "pickColor": "Pick a colour",
-      "colorTaken": "{{color}} is already used by another chip",
-      "allColorsUsed": "All ten colours are in use."
+      "colorTaken": "{{color}} is already used by another chip of this shape",
+      "allColorsUsed": "Every colour is in use in both shapes.",
+      "shape": "Shape",
+      "shape_chip": "Chip",
+      "shape_plaque": "Plaque",
+      "shapeTaken": "You already have a {{color}} token of that shape",
+      "reserved": "In bank"
     },
     "plan": {
       "startingTitle": "Buy-in stack",
@@ -294,12 +299,14 @@
     },
     "colorUps": {
       "sectionTitle": "Colour ups",
-      "helpText": "Run these at the breaks to keep stacks small. Odd chips are raced off as usual.",
+      "helpText": "Run these at the breaks to keep stacks small. Odd chips are raced off as usual. A chip is retired once it is worth so little that keeping it costs more than rounding a blind.",
       "none": "No colour up needed — the blinds never outgrow your smallest chip.",
       "atBreak": "Break after level {{level}}",
-      "exchange": "Trade {{ratio}} × {{from}} for 1 × {{into}}",
       "endsWith": "Finishes on: {{denoms}}",
-      "reserve": "keep ~{{n}} spare"
+      "rounds": "round level {{levels}} blinds",
+      "retire": "trade in all {{color}}",
+      "onHand": "retain {{n}} spare of {{color}}",
+      "reserveTitle": "Keep these in the bank — don't deal them out in starting stacks"
     },
     "errors": {
       "no_chips": "Enable at least one chip colour with a value and a quantity.",
@@ -309,18 +316,19 @@
       "insufficient_supply": "Not enough chips to build every stack. Add more chips or lower the stack size.",
       "starting_stack_unmakeable": "This stack can't be made exactly from the chip values you enabled.",
       "rebuy_stack_unmakeable": "The rebuy stack can't be made exactly from the chip values you enabled.",
-      "oversubscribed": "More chips are needed than you own."
+      "oversubscribed": "More {{colors}} chips are needed than you own."
     },
     "warnings": {
       "no_chip_divides_blinds": "No chip value divides your opening blinds — players won't be able to post them exactly.",
       "single_denomination": "Only one chip value fits this stack, so players get no mix. Enable a larger chip.",
       "levels_not_payable": "Blinds at level {{levels}} can't be paid exactly with the chips in play by then.",
-      "supply_limited": "Short on {{color}} chips — the mix was compromised to fit what you own.",
-      "no_spare_chips": "Every {{color}} chip is committed, leaving no spares.",
+      "supply_limited": "Short on {{colors}} chips — the mix was compromised to fit what you own.",
+      "no_spare_chips": "Every {{colors}} chip is committed, leaving no spares.",
       "rebuy_stack_unmakeable": "The rebuy stack can't be built from the chips left after the starting stacks.",
-      "color_up_short": "Only {{spare}} spare {{color}} chips, but this colour up needs about {{needed}}.",
-      "duplicate_denomination": "Two chips are both worth the same amount; the {{color}} one is ignored.",
-      "supply_forced_large_chip": "Short on small chips, so the stack includes a chip worth more than we would normally deal."
+      "color_up_short": "Colour ups can't fully exchange the {{colors}} chips — you need more large chips.",
+      "duplicate_denomination": "More than one chip is worth the same amount; {{colors}} ignored.",
+      "supply_forced_large_chip": "Short on small chips, so the stack includes a chip worth more than we would normally deal.",
+      "color_up_blocked": "No colour up at the break after level {{breaks}}: the blinds at level {{levels}} can't be paid with the next chip up, so the smaller chip has to stay in play."
     }
   }
 }

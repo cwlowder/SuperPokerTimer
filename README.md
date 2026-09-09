@@ -70,7 +70,7 @@ Minimum players per table (default 4): randomize/rebalance will reduce the numbe
 
 The Chips tab plans a chip distribution from your buy-in structure and the chips you actually own.
 
-Pick from ten standard chip colours, set what each is worth and how many you have, then give it a
+Pick from twelve standard chip colours, set what each is worth and how many you have, then give it a
 starting stack, a rebuy stack, and a maximum number of rebuys per player. Player count defaults to
 the tourney roster and can be overridden. Everything is sized for the worst case -- every player
 using all of their rebuys -- so your chips are guaranteed to cover the night.

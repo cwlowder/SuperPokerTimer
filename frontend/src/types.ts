@@ -10,9 +10,11 @@ export type Level = {
 
 export type Denomination = "cents" | "whole";
 
-export type ChipColor = { id: string; label: string; hex: string; ink: string };
+export type ChipColor = { id: string; label: string; hex: string; ink: string; edge: string };
 
-export type ChipSpec = { color: string; denom_cents: number; qty: number };
+export type ChipShape = "chip" | "plaque";
+
+export type ChipSpec = { color: string; denom_cents: number; qty: number; shape?: ChipShape };
 
 export type ChipSettings = {
   enabled: boolean;
@@ -24,7 +26,7 @@ export type ChipSettings = {
   chips: ChipSpec[];
 };
 
-export type ChipCount = { color: string; denom_cents: number; count: number; total: number };
+export type ChipCount = { color: string; shape: ChipShape; denom_cents: number; count: number; total: number };
 
 export type ChipStackPlan = {
   stack_cents: number;
@@ -34,15 +36,28 @@ export type ChipStackPlan = {
   stacks: number;
 };
 
-export type ChipInventoryRow = { color: string; denom_cents: number; owned: number; used: number; remaining: number };
+export type ChipInventoryRow = {
+  color: string;
+  shape: ChipShape;
+  denom_cents: number;
+  owned: number;
+  used: number;
+  reserved: number;
+  remaining: number;
+};
+
+export type ChipReserveRow = { color: string; shape: ChipShape; denom_cents: number; count: number };
+
+export type ChipExchange = { into_denom_cents: number; ratio: number; count: number };
 
 export type ColorUpStep = {
   after_level_index: number;
   retire_denom_cents: number;
-  into_denom_cents: number;
-  ratio: number;
+  exchanges: ChipExchange[];
   reserve_needed: number;
-  reserve_spare: number;
+  shortfall: number;
+  forced?: boolean;
+  rounding_level_indexes?: number[];
 };
 
 export type ChipPlan = {
@@ -55,6 +70,7 @@ export type ChipPlan = {
   starting: ChipStackPlan | null;
   rebuy: ChipStackPlan | null;
   inventory: ChipInventoryRow[];
+  reserve: ChipReserveRow[];
   color_ups: ColorUpStep[];
   denoms_in_play_at_end: number[];
 };
