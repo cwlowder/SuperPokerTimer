@@ -95,6 +95,15 @@ export function ChipSwatch({
   );
 }
 
+/**
+ * Name a token. A disc is just its colour; a plaque says so, because one colour
+ * can now be both and "White" alone would be ambiguous.
+ */
+function tokenName(color: ChipColor | undefined, shape: ChipShape | undefined, plaqueWord: string): string {
+  const base = color?.label ?? "";
+  return shape === "plaque" ? `${base} ${plaqueWord}` : base;
+}
+
 function ChipCountPill({
   color,
   count,
@@ -104,6 +113,7 @@ function ChipCountPill({
   count: number;
   shape?: ChipShape;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -117,7 +127,7 @@ function ChipCountPill({
     >
       <ChipSwatch color={color} shape={shape} />
       <span style={{ fontSize: 20, fontWeight: 800 }}>{count}</span>
-      <span>{color?.label ?? ""}</span>
+      <span>{tokenName(color, shape, t("chips.inventory.shape_plaque").toLowerCase())}</span>
     </div>
   );
 }
@@ -202,10 +212,10 @@ function Notices({ plan, colorsById }: { plan: ChipPlan; colorsById: Record<stri
   const { t, i18n } = useTranslation();
   const items: { tone: "error" | "warn"; text: string }[] = [];
 
+  const plaqueWord = t("chips.inventory.shape_plaque").toLowerCase();
   const label = (id?: string) => (id ? colorsById[id]?.label ?? id : "");
-  // A colour can now name two tokens, so say which one unless it is a plain disc.
   const tokenLabel = (id?: string, shape?: string) =>
-    shape === "plaque" ? `${label(id)} ${t("chips.inventory.shape_plaque").toLowerCase()}` : label(id);
+    colorsById[id ?? ""] ? tokenName(colorsById[id ?? ""], shape as ChipShape, plaqueWord) : label(id);
   // "white, red and blue" rather than three separate notices.
   const listFormat = new Intl.ListFormat(i18n.language || "en", { style: "long", type: "conjunction" });
   const colorList = (ids?: string[], shapes?: string[]) =>
@@ -543,10 +553,7 @@ export function ChipsTab({
                             <ChipSwatch color={color} shape={shape} />
                           </button>
                           <span>
-                            {color?.label ?? chip.color}
-                            {shape === "plaque" ? (
-                              <span className="muted"> {t("chips.inventory.shape_plaque").toLowerCase()}</span>
-                            ) : null}
+                            {tokenName(color, shape, t("chips.inventory.shape_plaque").toLowerCase())}
                           </span>
                         </div>
                       </td>
@@ -724,7 +731,8 @@ export function ChipsTab({
                 <div style={{ display: "grid", gap: 10 }}>
                   {plan.color_ups.map((step, i) => {
                     const from = plan.inventory.find((r) => r.denom_cents === step.retire_denom_cents);
-                    const fromLabel = colorsById[from?.color ?? ""]?.label ?? "";
+                    const plaqueWord = t("chips.inventory.shape_plaque").toLowerCase();
+                    const fromLabel = tokenName(colorsById[from?.color ?? ""], from?.shape, plaqueWord);
                     return (
                       <div key={i} style={{ display: "grid", gap: 6 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -758,11 +766,11 @@ export function ChipsTab({
                                 <span className="muted" style={{ margin: "0 4px" }}>=</span>
                                 <span style={{ fontSize: 18, fontWeight: 800 }}>1</span>
                                 <ChipSwatch color={colorsById[into?.color ?? ""]} shape={into?.shape} size={22} />
-                                <span>{colorsById[into?.color ?? ""]?.label ?? ""}</span>
+                                <span>{tokenName(colorsById[into?.color ?? ""], into?.shape, plaqueWord)}</span>
                                 <span className="muted" style={{ fontSize: 13 }}>
                                   {t("chips.colorUps.onHand", {
                                     n: exchange.count,
-                                    color: colorsById[into?.color ?? ""]?.label ?? ""
+                                    color: tokenName(colorsById[into?.color ?? ""], into?.shape, plaqueWord)
                                   })}
                                 </span>
                               </div>
@@ -794,9 +802,15 @@ export function ChipsTab({
                   <div className="muted">
                     {t("chips.colorUps.endsWith", {
                       denoms: plan.denoms_in_play_at_end
-                        .map((d) => plan.inventory.find((r) => r.denom_cents === d)?.color)
+                        .map((d) => plan.inventory.find((r) => r.denom_cents === d))
                         .filter(Boolean)
-                        .map((c) => colorsById[c as string]?.label ?? c)
+                        .map((r) =>
+                          tokenName(
+                            colorsById[r!.color],
+                            r!.shape,
+                            t("chips.inventory.shape_plaque").toLowerCase()
+                          )
+                        )
                         .join(", ")
                     })}
                   </div>
