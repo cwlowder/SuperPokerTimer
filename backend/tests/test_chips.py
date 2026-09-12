@@ -477,20 +477,19 @@ def test_a_break_that_cannot_colour_up_says_why() -> None:
     """Silently skipping a break looks like the feature is broken."""
     awkward = [
         level(50, 100), level(100, 200), BREAK,
-        level(300, 600),
-        level(350, 700),   # not a multiple of 100, so the 50c chip is still needed
-        level(2000, 4000),
+        level(300, 600),   # 300 cannot be built from 200s and 500s at all
+        level(900, 1800),
     ]
     # The 50c chip is outgrown at a 300 small blind but not yet useless, so a level
     # that still needs it wins and the colour up is skipped.
-    schedule, remaining, blocked = plan_color_ups(awkward, [50, 100, 250], [50, 100, 250, 500])
+    schedule, remaining, blocked = plan_color_ups(awkward, [50, 200, 500], [50, 200, 500])
     assert schedule == []
     assert len(blocked) == 1
     step = blocked[0]
     assert step["retire_denom_cents"] == 50
-    assert step["needs_denom_cents"] == 100
-    assert step["blocking_level_indexes"] == [4]
-    assert remaining == [50, 100, 250]
+    assert step["needs_denom_cents"] == 200
+    assert step["blocking_level_indexes"] == [3]
+    assert remaining == [50, 200, 500]
 
 
 def test_multiple_breaks_produce_multiple_colour_ups() -> None:
@@ -507,17 +506,15 @@ def test_multiple_breaks_produce_multiple_colour_ups() -> None:
 
 def test_a_blocked_colour_up_surfaces_as_a_plan_warning() -> None:
     chips = [
-        {"color": "white", "denom_cents": 10, "qty": 400},
-        {"color": "red", "denom_cents": 50, "qty": 400},
-        {"color": "blue", "denom_cents": 100, "qty": 400},
-        {"color": "green", "denom_cents": 250, "qty": 400},
+        {"color": "white", "denom_cents": 50, "qty": 900},
+        {"color": "red", "denom_cents": 200, "qty": 900},
+        {"color": "blue", "denom_cents": 500, "qty": 900},
     ]
-    # The second break wants to retire the 50c chip, which is outgrown at a 300
-    # small blind but not yet useless, and level 9 still needs it.
+    # Retiring the 50c chip leaves 200s, and a 300 small blind cannot be built
+    # from those at all -- so the break is blocked and must say so.
     awkward = [
-        level(10, 20), level(20, 40), level(50, 100), BREAK,
-        level(100, 200), level(150, 300), BREAK,
-        level(300, 600), level(350, 700), level(2000, 4000),
+        level(50, 100), level(100, 200), BREAK,
+        level(300, 600), level(900, 1800),
     ]
     plan = plan_chips(
         chips=chips, players=8, max_rebuys=0,
@@ -530,11 +527,11 @@ def test_a_useless_chip_is_retired_even_if_a_level_then_needs_rounding() -> None
     """Carrying dead chips all night is worse than rounding one blind level."""
     awkward = [
         level(50, 100), level(100, 200), BREAK,
-        level(700, 1400),    # 50c is now 1/14 of the small blind: useless
-        level(1250, 2500),   # not a multiple of 100
+        level(600, 1200),   # 50c is now 1/12 of the small blind: useless
+        level(700, 1400),   # 700 cannot be built from 300s and 500s at all
         level(2000, 4000),
     ]
-    schedule, remaining, blocked = plan_color_ups(awkward, [50, 100, 250], [50, 100, 250, 500])
+    schedule, remaining, blocked = plan_color_ups(awkward, [50, 300, 500], [50, 300, 500])
     assert blocked == []
     assert len(schedule) == 1
     step = schedule[0]
@@ -549,10 +546,9 @@ def test_an_outgrown_but_useful_chip_is_kept() -> None:
     awkward = [
         level(50, 100), level(100, 200), BREAK,
         level(300, 600),
-        level(350, 700),
-        level(2000, 4000),
+        level(900, 1800),
     ]
-    schedule, remaining, blocked = plan_color_ups(awkward, [50, 100, 250], [50, 100, 250, 500])
+    schedule, remaining, blocked = plan_color_ups(awkward, [50, 200, 500], [50, 200, 500])
     assert schedule == []
     assert blocked and 50 in remaining
 
@@ -768,3 +764,38 @@ def test_no_colour_ups_means_no_reserve() -> None:
     )
     assert plan["reserve"] == []
     assert all(r["reserved"] == 0 for r in plan["inventory"])
+
+
+def test_payability_considers_every_chip_not_just_the_smallest() -> None:
+    """1250 is unreachable with 100s alone, but is 500 + 500 + 250.
+
+    Testing divisibility against the smallest chip called real structures broken.
+    """
+    assert payable_with(level(1250, 2500), [100, 250, 500])
+    assert payable_with(level(1250, 2500), 250)
+    assert not payable_with(level(1250, 2500), 100)
+    # A genuinely unreachable amount is still caught.
+    assert not payable_with(level(300, 600), [200, 500])
+
+
+def test_a_level_is_only_flagged_when_no_combination_pays_it() -> None:
+    from app.chips import level_warnings
+
+    schedule = [{"after_level_index": 1, "retire_denom_cents": 100,
+                 "exchanges": [{"into_denom_cents": 500, "ratio": 5, "count": 1}]}]
+    levels = [level(50, 100), BREAK, level(1250, 2500), level(300, 600)]
+    flagged = {w["level_index"] for w in level_warnings(levels, [100, 250, 500], schedule)}
+    # 1250 = 500 + 500 + 250, so it must not be flagged; 300 cannot be made from
+    # 250s and 500s, so it must be.
+    assert 2 not in flagged
+    assert 3 in flagged
+
+
+def test_chips_arriving_from_a_colour_up_count_as_in_play() -> None:
+    from app.chips import level_warnings
+
+    schedule = [{"after_level_index": 1, "retire_denom_cents": 50,
+                 "exchanges": [{"into_denom_cents": 300, "ratio": 6, "count": 1}]}]
+    levels = [level(50, 100), BREAK, level(300, 600)]
+    # The 300c chip only exists because the swap brought it in.
+    assert level_warnings(levels, [50, 500], schedule) == []

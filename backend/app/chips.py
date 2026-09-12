@@ -3,6 +3,7 @@
 Pure functions (no DB, no async) so the heuristics stay unit-testable, like seating.py.
 All money values are cents, matching the rest of the app.
 """
+from functools import lru_cache
 from math import gcd
 from typing import Any
 
@@ -87,11 +88,36 @@ def level_amounts(level: dict[str, Any]) -> list[int]:
     return out
 
 
-def payable_with(level: dict[str, Any], denom: int) -> bool:
-    """Can every blind/ante at this level be made exactly from chips of `denom` or larger?"""
-    if denom <= 0:
+@lru_cache(maxsize=4096)
+def _reachable(amount: int, denoms: tuple[int, ...]) -> bool:
+    """Can `amount` be made exactly from these denominations, using any number of each?"""
+    if amount <= 0:
+        return True
+    usable = sorted(d for d in denoms if 0 < d <= amount)
+    if not usable:
         return False
-    return all(a % denom == 0 for a in level_amounts(level))
+    reach = [False] * (amount + 1)
+    reach[0] = True
+    for value in range(usable[0], amount + 1):
+        for denom in usable:
+            if denom > value:
+                break
+            if reach[value - denom]:
+                reach[value] = True
+                break
+    return reach[amount]
+
+
+def payable_with(level: dict[str, Any], denoms: int | list[int]) -> bool:
+    """Can every blind/ante at this level be made exactly from the chips in play?
+
+    Not a divisibility test against the smallest chip: 1250 is unreachable with
+    100s alone but is 500 + 500 + 250, so the whole set has to be considered.
+    """
+    pool = (denoms,) if isinstance(denoms, int) else tuple(sorted(set(denoms)))
+    if not any(d > 0 for d in pool):
+        return False
+    return all(_reachable(a, pool) for a in level_amounts(level))
 
 
 def blind_unit(level: dict[str, Any]) -> int:
@@ -361,7 +387,8 @@ def plan_color_ups(
                 }]
                 shortfall = retired
         reserve = sum(e["count"] for e in exchanges)
-        blockers = [i for i, l in future if not payable_with(l, nxt)]
+        after_swap = sorted(set(in_play[1:] + [e["into_denom_cents"] for e in exchanges]))
+        blockers = [i for i, l in future if not payable_with(l, after_swap)]
         # A chip that is merely outgrown stays if anything still needs it. One that
         # is genuinely useless goes anyway -- the odd level gets rounded, which beats
         # every player carrying dead chips for the rest of the night.
@@ -395,20 +422,23 @@ def plan_color_ups(
 
 def level_warnings(levels: list[dict[str, Any]], denoms: list[int], schedule: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Flag levels whose blinds can't be posted exactly with the chips in play."""
-    retire_at = {s["after_level_index"]: s["retire_denom_cents"] for s in schedule}
-    in_play = list(denoms)
+    steps = {s["after_level_index"]: s for s in schedule}
+    in_play = sorted(set(denoms))
     out: list[dict[str, Any]] = []
     for idx, level in enumerate(levels):
-        if idx in retire_at and len(in_play) > 1:
-            in_play = in_play[1:]
+        step = steps.get(idx)
+        if step is not None:
+            # The retired chip leaves and whatever it was traded for arrives.
+            arriving = [e["into_denom_cents"] for e in step["exchanges"]]
+            in_play = sorted(set(d for d in in_play if d != step["retire_denom_cents"]) | set(arriving))
         if is_break(level) or not in_play:
             continue
-        smallest = in_play[0]
-        bad = [a for a in level_amounts(level) if a % smallest]
+        bad = [a for a in level_amounts(level) if not _reachable(a, tuple(in_play))]
         if bad:
             out.append({
                 "level_index": idx,
-                "smallest_denom_cents": smallest,
+                "smallest_denom_cents": in_play[0],
+                "denoms_in_play": list(in_play),
                 "amounts_cents": bad,
             })
     return out
